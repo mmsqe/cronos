@@ -16,6 +16,7 @@ from .utils import (
     CONTRACTS,
     KEYS,
     add_ini_sections,
+    build_batch_tx,
     deploy_contract,
     dump_toml,
     eth_to_bech32,
@@ -29,6 +30,7 @@ from .utils import (
 )
 
 pytestmark = pytest.mark.gravity
+tx_id_counter = 0
 
 Account.enable_unaudited_hdwallet_features()
 
@@ -274,6 +276,10 @@ def test_gravity_transfer(gravity):
             ADDRS["validator"], amount, 0, 1
         ).buildTransaction({"from": ADDRS["community"]})
         txreceipt = send_transaction(cronos_w3, tx, KEYS["community"])
+
+        global tx_id_counter
+        tx_id_counter += 1
+
         # CRC20 emit 3 logs for send_to_chain:
         # burn
         # __CronosSendToChain
@@ -473,33 +479,80 @@ def test_gravity_cancel_transfer(gravity):
 
         wait_for_fn("send-to-crc21", local_check_auto_deployment)
 
+        nonce = cronos_w3.eth.get_transaction_count(community)
+
         # send it back to erc20
         tx = crc21_contract.functions.send_to_chain(
             ADDRS["validator"], amount, 0, 1
-        ).buildTransaction({"from": community})
-        txreceipt = send_transaction(cronos_w3, tx, KEYS["community"])
+        ).buildTransaction({"from": community, "nonce": nonce})
+        global tx_id_counter
+        tx_id_counter += 1
+
+        # cancel the send_to_chain
+        canceltx = cancel_contract.functions.cancelTransaction(
+            tx_id_counter
+        ).buildTransaction({"from": community, "nonce": nonce + 1})
+
+        txs, tx_hashes = build_batch_tx(
+            cronos_w3, cli, [tx, canceltx], KEYS["community"]
+        )
+        rsp = cli.broadcast_tx_json(txs)
+
+        assert rsp["code"] == 0, rsp["raw_log"]
+
+        receipts = [cronos_w3.eth.wait_for_transaction_receipt(h) for h in tx_hashes]
+        assert len(receipts) == 2
+        [txreceipt, canceltx] = receipts
+
         # CRC20 emit 3 logs for send_to_chain:
         # burn
         # __CronosSendToChain
         # __CronosSendToChainResponse
         assert len(txreceipt.logs) == 3
-        tx_id = get_id_from_receipt(txreceipt)
-        assert txreceipt.status == 1, "should success"
+        [burn_log, send_log, send_res_log] = txreceipt.logs
 
-        # Check_deduction
-        balance_after_send = crc21_contract.caller.balanceOf(community)
-        assert balance_after_send == 0
+        assert burn_log.address == crc21_contract.address
+        assert burn_log.topics == [
+            HexBytes(
+                abi.event_signature_to_log_topic("Burn(address,uint256)")
+            ),
+            HexBytes(b"\x00" * 12 + community),
+        ]
+        assert burn_log.data == "0x00000000000000000000000000000000000000000000000000000000000003e8"
+        assert burn_log.logIndex == 0
 
-        # Cancel the send_to_chain
-        canceltx = cancel_contract.functions.cancelTransaction(
-            int(tx_id, base=16)
-        ).buildTransaction({"from": community})
-        canceltxreceipt = send_transaction(cronos_w3, canceltx, KEYS["community"])
-        print("canceltxreceipt", canceltxreceipt)
-        assert canceltxreceipt.status == 1, "should success"
+        assert send_log.address == crc21_contract.address
+        assert send_log.topics == [
+            HexBytes(
+                abi.event_signature_to_log_topic(
+                    "__CronosSendToChain(address,address,uint256,uint256,uint256)"
+                )
+            ),
+        ]
+        assert send_log.data == "0x000000000000000000000000378c50d9264c63f3f92b806d4ee56e9d86ffb3ec00000000000000000000000057f96e6b86cdefdb3d412547816a82e3e0ebf9d200000000000000000000000000000000000000000000000000000000000003e800000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001"
+        assert send_log.logIndex == 1
 
-        def check_refund():
-            v = crc21_contract.caller.balanceOf(community)
-            return v == amount
+        assert send_res_log.address == crc21_contract.address
+        assert send_res_log.topics == [
+            HexBytes(
+                abi.event_signature_to_log_topic("__CronosSendToChainResponse(uint256)")
+            ),
+        ]
+        assert send_res_log.data == "0x000000000000000000000000000000000000000000000000000000000000000" + str(tx_id_counter)
+        assert send_res_log.logIndex == 2
 
-        wait_for_fn("cancel-send-to-ethereum", check_refund)
+        assert len(canceltx.logs) == 1
+        [cancel_log] = canceltx.logs
+
+        assert cancel_log.address == cancel_contract.address
+        assert cancel_log.topics == [
+            HexBytes(
+                abi.event_signature_to_log_topic("__CronosCancelSendToChain(address,uint256)")
+            ),
+        ]
+        assert cancel_log.data == "0x000000000000000000000000378c50d9264c63f3f92b806d4ee56e9d86ffb3ec000000000000000000000000000000000000000000000000000000000000000" + str(tx_id_counter)
+        assert cancel_log.logIndex == 3
+
+        # Check_balance
+        balance = crc21_contract.caller.balanceOf(community)
+        assert balance == amount
