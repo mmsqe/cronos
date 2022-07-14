@@ -42,6 +42,7 @@ import (
 
 	"github.com/crypto-org-chain/cronos/app"
 	"github.com/crypto-org-chain/cronos/x/cronos/rpc"
+	"github.com/jpillora/maplock"
 )
 
 const (
@@ -53,6 +54,8 @@ const (
 	FlagExportToFile      = "export-to-file"
 	FlagPatchFromFile     = "patch-from-file"
 )
+
+var replayTxLock = maplock.New()
 
 // FixUnluckyTxCmd update the tx execution result of false-failed tx in tendermint db
 func FixUnluckyTxCmd() *cobra.Command {
@@ -375,7 +378,7 @@ func findUnluckyTx(blockResult *tmstate.ABCIResponses) int {
 }
 
 // replay the tx and return the result
-func (db *tmDB) replayTx(appCreator func() *app.App, height int64, txIndex int, initialHeight int64) (*abci.TxResult, error) {
+func (db *tmDB) replayTx(appCreator func() *app.App, height int64, txIndex int, initialHeight int64) (res *abci.TxResult, err error) {
 	block := db.blockStore.LoadBlock(height)
 	if block == nil {
 		return nil, fmt.Errorf("block %d not found", height)
@@ -412,7 +415,14 @@ func (db *tmDB) replayTx(appCreator func() *app.App, height int64, txIndex int, 
 		anApp.DeliverTx(abci.RequestDeliverTx{Tx: tx})
 	}
 
-	rsp := anApp.DeliverTx(abci.RequestDeliverTx{Tx: block.Txs[txIndex]})
+	tx := block.Txs[txIndex]
+	hash := fmt.Sprintf("%x", tx.Hash())
+	replayTxLock.Lock(hash)
+	defer func() {
+		err = replayTxLock.Unlock(hash)
+	}()
+
+	rsp := anApp.DeliverTx(abci.RequestDeliverTx{Tx: tx})
 	return &abci.TxResult{
 		Height: block.Header.Height,
 		Index:  uint32(txIndex),

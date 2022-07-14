@@ -90,6 +90,7 @@ require (
 	github.com/inconshreveable/mousetrap v1.0.0 // indirect
 	github.com/jackpal/go-nat-pmp v1.0.2-0.20160603034137-1fa385a6f458 // indirect
 	github.com/jmhodges/levigo v1.0.0 // indirect
+	github.com/jpillora/maplock v0.0.0-20160420012925-5c725ac6e22a // indirect
 	github.com/keybase/go-keychain v0.0.0-20190712205309-48d3d31d256d // indirect
 	github.com/klauspost/compress v1.15.1 // indirect
 	github.com/lib/pq v1.10.6 // indirect
