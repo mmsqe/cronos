@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"bytes"
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
@@ -15,6 +16,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/go-redis/redis/v8"
 	"github.com/gogo/protobuf/proto"
 	"github.com/spf13/cobra"
 
@@ -66,6 +68,11 @@ func FixUnluckyTxCmd() *cobra.Command {
 			defer func() {
 				log.Println("total time: ", time.Since(now))
 			}()
+			rdb := redis.NewClient(&redis.Options{
+				Addr:     "localhost:6379",
+				Password: "",
+				DB:       0,
+			})
 			ctx := server.GetServerContextFromCmd(cmd)
 			clientCtx := client.GetClientContextFromCmd(cmd)
 
@@ -183,6 +190,20 @@ func FixUnluckyTxCmd() *cobra.Command {
 					return err
 				}
 
+				tx := block.Txs[txIndex]
+				txHash := tx.Hash()
+				jsonStr, err := json.Marshal(struct {
+					BlockResult *tmstate.ABCIResponses `json:"blockResult"`
+					Result      *abci.TxResult         `json:"result"`
+				}{blockResult, result})
+				if err != nil {
+					return err
+				}
+				saved, err := rdb.HSet(context.Background(), fmt.Sprintf("%x", txHash), fmt.Sprintf("%d", height), jsonStr).Result()
+				if err != nil {
+					return err
+				}
+
 				if dryRun {
 					return clientCtx.PrintProto(result)
 				}
@@ -202,7 +223,7 @@ func FixUnluckyTxCmd() *cobra.Command {
 					}
 				}
 
-				logTnxHash(clientCtx.TxConfig, result, action)
+				logTnxHash(clientCtx.TxConfig, result, action, saved)
 				return nil
 			}
 
@@ -369,16 +390,16 @@ func newTxIndexer(config *tmcfg.Config, chainID string) (txindex.TxIndexer, erro
 func (db *tmDB) FindUnluckyTx(blockResult *tmstate.ABCIResponses, block *tmtypes.Block) (int, error) {
 	for txIndex, txResult := range blockResult.DeliverTxs {
 		if rpc.TxExceedsBlockGasLimit(txResult) {
-			tx := block.Txs[txIndex]
-			txHash := tx.Hash()
-			indexed, err := db.txIndexer.Get(txHash)
-			if err != nil {
-				return -1, err
-			}
-			if indexed != nil && indexed.Result.IsOK() {
-				log.Printf("skip %x at index %d for height %d\n", txHash, txIndex, block.Height)
-				continue
-			}
+			// tx := block.Txs[txIndex]
+			// txHash := tx.Hash()
+			// indexed, err := db.txIndexer.Get(txHash)
+			// if err != nil {
+			// 	return -1, err
+			// }
+			// if indexed != nil && indexed.Result.IsOK() {
+			// 	log.Printf("skip %x at index %d for height %d\n", txHash, txIndex, block.Height)
+			// 	continue
+			// }
 			return txIndex, nil
 		}
 	}
@@ -429,7 +450,7 @@ func (db *tmDB) replayTx(appCreator func() *app.App, block *tmtypes.Block, txInd
 }
 
 // decode the tx to get eth tx hashes to log
-func logTnxHash(txConfig client.TxConfig, result *abci.TxResult, action string) {
+func logTnxHash(txConfig client.TxConfig, result *abci.TxResult, action string, saved int64) {
 	tx, err := txConfig.TxDecoder()(result.Tx)
 	if err != nil {
 		log.Println("can't parse the patched tx", result.Height, result.Index)
@@ -438,7 +459,7 @@ func logTnxHash(txConfig client.TxConfig, result *abci.TxResult, action string) 
 	for _, msg := range tx.GetMsgs() {
 		ethMsg, ok := msg.(*evmtypes.MsgEthereumTx)
 		if ok {
-			log.Println(action, ethMsg.Hash, result.Height, result.Index)
+			log.Println(action, ethMsg.Hash, result.Height, result.Index, saved)
 		}
 	}
 }
@@ -468,7 +489,7 @@ func (db *tmDB) PatchFromImport(txConfig client.TxConfig, reader io.Reader) erro
 		if err := db.stateStore.SaveABCIResponses(res.Height, &blockRes); err != nil {
 			return err
 		}
-		logTnxHash(txConfig, &res, "import patched")
+		logTnxHash(txConfig, &res, "import patched", 0)
 	}
 }
 
