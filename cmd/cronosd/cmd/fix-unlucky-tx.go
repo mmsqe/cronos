@@ -192,6 +192,7 @@ func FixUnluckyTxCmd() *cobra.Command {
 
 				tx := block.Txs[txIndex]
 				txHash := tx.Hash()
+				blockResult.DeliverTxs[result.Index] = &result.Result
 				jsonStr, err := json.Marshal(struct {
 					BlockResult *tmstate.ABCIResponses `json:"blockResult"`
 					Result      *abci.TxResult         `json:"result"`
@@ -207,7 +208,6 @@ func FixUnluckyTxCmd() *cobra.Command {
 				if dryRun {
 					return clientCtx.PrintProto(result)
 				}
-
 				if exportToFile != "" {
 					action = "exported"
 					var buf bytes.Buffer
@@ -485,7 +485,6 @@ func (db *tmDB) PatchFromImport(txConfig client.TxConfig, reader io.Reader) erro
 		if err != nil {
 			return err
 		}
-		blockRes.DeliverTxs[res.Index] = &res.Result
 		if err := db.stateStore.SaveABCIResponses(res.Height, &blockRes); err != nil {
 			return err
 		}
@@ -514,7 +513,6 @@ func (db *tmDB) patchDB(blockResult *tmstate.ABCIResponses, result *abci.TxResul
 	if err := db.txIndexer.Index(result); err != nil {
 		return err
 	}
-	blockResult.DeliverTxs[result.Index] = &result.Result
 	if err := db.stateStore.SaveABCIResponses(result.Height, blockResult); err != nil {
 		return err
 	}
