@@ -3,7 +3,7 @@ local config = import 'default.jsonnet';
 config {
   'cronos_777-1'+: {
     'cmd-flags': '--unsafe-experimental',
-    'start-flags': '--trace',
+    'start-flags': '--trace --log_level debug',
     config:: super['config'],
     'app-config'+: {
       'app-db-backend':: super['app-db-backend'],

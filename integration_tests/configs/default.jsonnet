@@ -2,7 +2,7 @@
   dotenv: '../../scripts/.env',
   'cronos_777-1': {
     cmd: 'cronosd',
-    'start-flags': '--trace',
+    'start-flags': '--trace --log_level debug',
     config: {
       mempool: {
         version: 'v1',

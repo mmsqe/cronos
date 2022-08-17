@@ -10,7 +10,9 @@ def test_pending_transaction_filter(cluster):
 
     signed = sign_transaction(w3, {"to": ADDRS["community"], "value": 1000})
     txhash = w3.eth.send_raw_transaction(signed.rawTransaction)
+    print("txhash: ", txhash.hex())
     receipt = w3.eth.wait_for_transaction_receipt(txhash)
+    print("receipt: ", receipt)
     assert receipt.status == 1
     assert txhash in flt.get_new_entries()
 

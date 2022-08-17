@@ -18,7 +18,7 @@ config {
   },
   'chainmain-1': {
     cmd: 'chain-maind',
-    'start-flags': '--trace',
+    'start-flags': '--trace --log_level debug',
     'account-prefix': 'cro',
     'app-config': {
       'minimum-gas-prices': '500basecro',
