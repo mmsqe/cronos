@@ -45,7 +45,7 @@ import sources.nixpkgs {
         OPENSSL_NO_VENDOR = "1";
         OPENSSL_DIR = pkgs.symlinkJoin {
           name = "openssl";
-          paths = with pkgs.openssl; [ out dev ];
+          paths = with pkgs.openssl_1_1; [ out dev ];
         };
       };
       hermes = pkgs.callPackage ./hermes.nix { src = sources.ibc-rs; };
