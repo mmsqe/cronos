@@ -5,6 +5,7 @@ package cronos;
 
 import "gogoproto/gogo.proto";
 import "cosmos/base/v1beta1/coin.proto";
+import "cronos/cronos.proto";
 
 option go_package = "github.com/crypto-org-chain/cronos/x/cronos/types";
 
@@ -20,6 +21,9 @@ service Msg {
 
     // UpdateTokenMapping defines a method to update token mapping
     rpc UpdateTokenMapping(MsgUpdateTokenMapping) returns (MsgUpdateTokenMappingResponse);
+
+    // UpdateParams defines a method to update cronos module params
+    rpc UpdateParams(MsgUpdateParams) returns (MsgUpdateParamsResponse);
 }
 
 // MsgConvertVouchers represents a message to convert ibc voucher coins to cronos evm coins.
@@ -56,5 +60,12 @@ message MsgUpdateTokenMapping {
 // MsgUpdateTokenMappingResponse defines the response type
 message MsgUpdateTokenMappingResponse {
 }
+
+message MsgUpdateParams {
+  // NOTE: All parameters must be supplied.
+  Params params = 1 [(gogoproto.nullable) = false];
+}
+
+message MsgUpdateParamsResponse {}
 
 // this line is used by starport scaffolding # proto/tx/message
