@@ -32,8 +32,8 @@ var (
 	KeyPrefixDenomToAutoContract     = []byte{prefixDenomToAutoContract}
 	KeyPrefixContractToDenom         = []byte{prefixContractToDenom}
 
-	// KeyPrefixParams is the prefix for params key
-	KeyPrefixParams = []byte{0x00}
+	// ParamsKey is the key for params.
+	ParamsKey = []byte{0x00}
 )
 
 // this line is used by starport scaffolding # ibc/keys/port

@@ -39,6 +39,10 @@ type (
 		// account keeper
 		accountKeeper types.AccountKeeper
 
+		// the address capable of executing a MsgUpdateParams message. Typically, this
+		// should be the x/gov module account.
+		authority string
+
 		// this line is used by starport scaffolding # ibc/keeper/attribute
 	}
 )
@@ -53,6 +57,7 @@ func NewKeeper(
 	gravityKeeper types.GravityKeeper,
 	evmKeeper types.EvmKeeper,
 	accountKeeper types.AccountKeeper,
+	authority string,
 	// this line is used by starport scaffolding # ibc/keeper/parameter
 ) *Keeper {
 	// set KeyTable if it has not already been set
@@ -70,6 +75,7 @@ func NewKeeper(
 		gravityKeeper:  gravityKeeper,
 		evmKeeper:      evmKeeper,
 		accountKeeper:  accountKeeper,
+		authority:      authority,
 		// this line is used by starport scaffolding # ibc/keeper/return
 	}
 }
