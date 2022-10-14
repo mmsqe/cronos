@@ -186,7 +186,10 @@ func NewMsgUpdateParams(authority string, params Params) *MsgUpdateParams {
 
 // GetSigners returns the expected signers for a MsgUpdateParams message.
 func (msg *MsgUpdateParams) GetSigners() []sdk.AccAddress {
-	addr, _ := sdk.AccAddressFromBech32(msg.Authority)
+	addr, err := sdk.AccAddressFromBech32(msg.Authority)
+	if err != nil {
+		panic(err)
+	}
 	return []sdk.AccAddress{addr}
 }
 
