@@ -504,6 +504,7 @@ func New(
 		gravityKeeper,
 		app.EvmKeeper,
 		app.AccountKeeper,
+		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 	)
 	cronosModule := cronos.NewAppModule(app.CronosKeeper, app.AccountKeeper, app.BankKeeper)
 

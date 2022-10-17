@@ -3,6 +3,8 @@ package keeper_test
 import (
 	"errors"
 
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	"github.com/crypto-org-chain/cronos/app"
 	cronosmodulekeeper "github.com/crypto-org-chain/cronos/x/cronos/keeper"
 	keepertest "github.com/crypto-org-chain/cronos/x/cronos/keeper/mock"
@@ -46,6 +48,7 @@ func (suite *KeeperTestSuite) TestGetSourceChannelID() {
 				suite.app.GravityKeeper,
 				suite.app.EvmKeeper,
 				suite.app.AccountKeeper,
+				authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 			)
 			suite.app.CronosKeeper = cronosKeeper
 
