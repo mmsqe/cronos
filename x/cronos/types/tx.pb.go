@@ -333,6 +333,7 @@ func (m *MsgUpdateTokenMappingResponse) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_MsgUpdateTokenMappingResponse proto.InternalMessageInfo
 
+// MsgUpdateParams defines the request type for updating cronos params.
 type MsgUpdateParams struct {
 	// authority is the address of the governance account.
 	Authority string `protobuf:"bytes,1,opt,name=authority,proto3" json:"authority,omitempty"`
@@ -387,6 +388,7 @@ func (m *MsgUpdateParams) GetParams() Params {
 	return Params{}
 }
 
+// MsgUpdateParamsResponse defines the response type.
 type MsgUpdateParamsResponse struct {
 }
 

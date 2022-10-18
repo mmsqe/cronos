@@ -61,6 +61,7 @@ message MsgUpdateTokenMapping {
 message MsgUpdateTokenMappingResponse {
 }
 
+// MsgUpdateParams defines the request type for updating cronos params.
 message MsgUpdateParams {
     // authority is the address of the governance account.
     string authority = 1;
@@ -69,6 +70,7 @@ message MsgUpdateParams {
     Params params = 2 [(gogoproto.nullable) = false];
 }
 
+// MsgUpdateParamsResponse defines the response type.
 message MsgUpdateParamsResponse {}
 
 // this line is used by starport scaffolding # proto/tx/message
