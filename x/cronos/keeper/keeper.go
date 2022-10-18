@@ -7,7 +7,6 @@ import (
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
-	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 
 	"github.com/tendermint/tendermint/libs/log"
 
@@ -26,8 +25,6 @@ type (
 		storeKey storetypes.StoreKey
 		memKey   storetypes.StoreKey
 
-		// module specific parameter space that can be configured through governance
-		paramSpace paramtypes.Subspace
 		// update balance and accounting operations with coins
 		bankKeeper types.BankKeeper
 		// ibc transfer operations
@@ -51,7 +48,6 @@ func NewKeeper(
 	cdc codec.Codec,
 	storeKey,
 	memKey storetypes.StoreKey,
-	paramSpace paramtypes.Subspace,
 	bankKeeper types.BankKeeper,
 	transferKeeper types.TransferKeeper,
 	gravityKeeper types.GravityKeeper,
@@ -60,16 +56,10 @@ func NewKeeper(
 	authority string,
 	// this line is used by starport scaffolding # ibc/keeper/parameter
 ) *Keeper {
-	// set KeyTable if it has not already been set
-	if !paramSpace.HasKeyTable() {
-		paramSpace = paramSpace.WithKeyTable(types.ParamKeyTable())
-	}
-
 	return &Keeper{
 		cdc:            cdc,
 		storeKey:       storeKey,
 		memKey:         memKey,
-		paramSpace:     paramSpace,
 		bankKeeper:     bankKeeper,
 		transferKeeper: transferKeeper,
 		gravityKeeper:  gravityKeeper,

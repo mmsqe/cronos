@@ -498,7 +498,6 @@ func New(
 		appCodec,
 		keys[cronostypes.StoreKey],
 		keys[cronostypes.MemStoreKey],
-		app.GetSubspace(cronostypes.ModuleName),
 		app.BankKeeper,
 		app.TransferKeeper,
 		gravityKeeper,
@@ -506,7 +505,7 @@ func New(
 		app.AccountKeeper,
 		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
 	)
-	cronosModule := cronos.NewAppModule(app.CronosKeeper, app.AccountKeeper, app.BankKeeper)
+	cronosModule := cronos.NewAppModule(app.CronosKeeper, app.AccountKeeper, app.BankKeeper, app.GetSubspace(cronostypes.ModuleName))
 
 	// register the proposal types
 	govRouter := govv1beta1.NewRouter()
