@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"strings"
 
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 
@@ -14,6 +13,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/crypto-org-chain/cronos/x/cronos/types"
 	"github.com/ethereum/go-ethereum/common"
 	// this line is used by starport scaffolding # ibc/keeper/import
@@ -56,6 +56,10 @@ func NewKeeper(
 	authority string,
 	// this line is used by starport scaffolding # ibc/keeper/parameter
 ) *Keeper {
+	if _, err := sdk.AccAddressFromBech32(authority); err != nil {
+		panic(err)
+	}
+
 	return &Keeper{
 		cdc:            cdc,
 		storeKey:       storeKey,
