@@ -60,6 +60,11 @@ func FixUnluckyTxCmd() *cobra.Command {
 				if block == nil {
 					return fmt.Errorf("block %d not found", height)
 				}
+				for txIndex, txResult := range blockResult.DeliverTxs {
+					tx := block.Txs[txIndex]
+					txHash := tx.Hash()
+					fmt.Printf("mm-txResult: %+v, %+v, %+v\n", txIndex, txResult, txHash)
+				}
 				return nil
 			}
 			concurrency, err := cmd.Flags().GetInt(FlagConcurrency)
