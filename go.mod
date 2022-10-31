@@ -189,7 +189,7 @@ require (
 )
 
 replace (
-	github.com/cosmos/cosmos-sdk => github.com/cosmos/cosmos-sdk v0.46.2
+	github.com/cosmos/cosmos-sdk => github.com/mmsqe/cosmos-sdk v0.46.2-0.20221031060711-b0f9bfbfd78a
 	github.com/ethereum/go-ethereum => github.com/ethereum/go-ethereum v1.10.19
 	github.com/evmos/ethermint => github.com/mmsqe/ethermint v0.6.1-0.20221028030219-fd8be3784ce1
 

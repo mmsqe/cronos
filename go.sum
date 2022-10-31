@@ -619,8 +619,6 @@ github.com/cosmos/btcutil v1.0.4 h1:n7C2ngKXo7UC9gNyMNLbzqz7Asuf+7Qv4gnX/rOdQ44=
 github.com/cosmos/btcutil v1.0.4/go.mod h1:Ffqc8Hn6TJUdDgHBwIZLtrLQC1KdJ9jGJl/TvgUaxbU=
 github.com/cosmos/cosmos-proto v1.0.0-alpha7 h1:yqYUOHF2jopwZh4dVQp3xgqwftE5/2hkrwIV6vkUbO0=
 github.com/cosmos/cosmos-proto v1.0.0-alpha7/go.mod h1:dosO4pSAbJF8zWCzCoTWP7nNsjcvSUBQmniFxDg5daw=
-github.com/cosmos/cosmos-sdk v0.46.2 h1:3dUNqbLas94ud5aTcJKCwxVOmNXpuGBtVQTMrYczTwY=
-github.com/cosmos/cosmos-sdk v0.46.2/go.mod h1:0aUPGPU6PWaDEaHNjtgrpNhgxo9bAUrQ7BO7XCvFOfs=
 github.com/cosmos/cosmos-sdk/db v1.0.0-beta.1/go.mod h1:JUMM2MxF9wuwzRWZJjb8BjXsn1BmPmdBd3a75pIct4I=
 github.com/cosmos/go-bip39 v0.0.0-20180819234021-555e2067c45d/go.mod h1:tSxLoYXyBmiFeKpvmq4dzayMdCjCnu8uqmCysIGBT2Y=
 github.com/cosmos/go-bip39 v1.0.0 h1:pcomnQdrdH22njcAatO0yWojsUnCO3y2tNoV1cb6hHY=
@@ -1594,6 +1592,8 @@ github.com/mitchellh/pointerstructure v1.2.0 h1:O+i9nHnXS3l/9Wu7r4NrEdwA2VFTicjU
 github.com/mitchellh/pointerstructure v1.2.0/go.mod h1:BRAsLI5zgXmw97Lf6s25bs8ohIXc3tViBH44KcwB2g4=
 github.com/mitchellh/reflectwalk v1.0.0/go.mod h1:mSTlrgnPZtwu0c4WaC2kGObEpuNDbx0jmZXqmk4esnw=
 github.com/mitchellh/reflectwalk v1.0.1/go.mod h1:mSTlrgnPZtwu0c4WaC2kGObEpuNDbx0jmZXqmk4esnw=
+github.com/mmsqe/cosmos-sdk v0.46.2-0.20221031060711-b0f9bfbfd78a h1:6xzQ5UTHZuRDXNK8+r9bKikLPIZL9tYXtSNBzq/VGrw=
+github.com/mmsqe/cosmos-sdk v0.46.2-0.20221031060711-b0f9bfbfd78a/go.mod h1:0aUPGPU6PWaDEaHNjtgrpNhgxo9bAUrQ7BO7XCvFOfs=
 github.com/mmsqe/ethermint v0.6.1-0.20221028030219-fd8be3784ce1 h1:JSwE/ak5m6b99crmhHIhMKKojwQquOQ+xy2qiCiSxV4=
 github.com/mmsqe/ethermint v0.6.1-0.20221028030219-fd8be3784ce1/go.mod h1:ShvGq2YBx0Xy93LXDtOV3+vabdm9XCnZfAzcDJRkitc=
 github.com/moby/buildkit v0.8.1/go.mod h1:/kyU1hKy/aYCuP39GZA9MaKioovHku57N6cqlKZIaiQ=

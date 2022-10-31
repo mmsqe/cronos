@@ -147,13 +147,20 @@ func FixUnluckyTxCmd() *cobra.Command {
 				for txIndex, txResult := range results.DeliverTxs {
 					tx := block.Txs[txIndex]
 					// txHash := tx.Hash()
-					// fmt.Printf("mm-txResult: %+v, %+v, %+v\n", txIndex, txResult, txHash)
 					app := appCreator()
+					// existedRes := &abci.TxResult{
+					// 	Height: block.Height,
+					// 	Index:  uint32(txIndex),
+					// 	Tx:     block.Txs[txIndex],
+					// 	Result: *txResult,
+					// }
 					result, err := tmDB.replayTx(app, block, txIndex, state.InitialHeight)
 					if err != nil {
 						return err
 					}
-					// fmt.Printf("mm-result: %+v, %+v, %+v\n", txIndex, result, txHash)
+					// fmt.Printf("mm-existedRes: %+v\n", existedRes.Result)
+					// fmt.Printf("mm-result: %+v\n", result.Result)
+					// return nil
 					parsedTx, err := clientCtx.TxConfig.TxDecoder()(result.Tx)
 					if err != nil {
 						fmt.Println("can't parse the patched tx", result.Height, result.Index)
@@ -244,6 +251,7 @@ func FixUnluckyTxCmd() *cobra.Command {
 						if contextHeight < 1 {
 							contextHeight = 1
 						}
+
 						// 0xfef22c2b121d1e0ddd0a5e072ec8fea91d8c0ff2a6e37fb22443c1d74a324018
 						proposerAddress := "A3F7397F81D4CC82D566633F9728DFB50A35D965"
 						// 0xf699cf6cfc8b7c05ec123cdcaa2f1595f9c5bd757971a3ece189158722c49938
@@ -276,7 +284,7 @@ func FixUnluckyTxCmd() *cobra.Command {
 						if err != nil {
 							return status.Error(codes.Internal, err.Error())
 						}
-
+						return nil
 						fmt.Printf("mm-decodedResult: %+v\n", string(resultData))
 					}
 				}
@@ -461,7 +469,7 @@ func getBeginBlockValidatorInfo(block *tmtypes.Block, store sm.Store,
 
 // replay the tx and return the result
 func (db *tmDB) replayTx(anApp *app.App, block *tmtypes.Block, txIndex int, initialHeight int64) (*abci.TxResult, error) {
-	if err := anApp.LoadHeight(block.Header.Height - 1); err != nil {
+	if err := anApp.LoadHeight(block.Height - 1); err != nil {
 		return nil, err
 	}
 
@@ -488,10 +496,9 @@ func (db *tmDB) replayTx(anApp *app.App, block *tmtypes.Block, txIndex int, init
 	for _, tx := range block.Txs[:txIndex] {
 		anApp.DeliverTx(abci.RequestDeliverTx{Tx: tx})
 	}
-
 	rsp := anApp.DeliverTx(abci.RequestDeliverTx{Tx: block.Txs[txIndex]})
 	return &abci.TxResult{
-		Height: block.Header.Height,
+		Height: block.Height,
 		Index:  uint32(txIndex),
 		Tx:     block.Txs[txIndex],
 		Result: rsp,
