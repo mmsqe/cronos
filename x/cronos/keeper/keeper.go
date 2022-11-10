@@ -100,6 +100,11 @@ func (k Keeper) getAutoContractByDenom(ctx sdk.Context, denom string) (common.Ad
 	return common.BytesToAddress(bz), true
 }
 
+// GetAuthority returns the x/cronos module's authority.
+func (k Keeper) GetAuthority() string {
+	return k.authority
+}
+
 // GetContractByDenom find the corresponding contract for the denom,
 // external contract is taken in preference to auto-deployed one
 func (k Keeper) GetContractByDenom(ctx sdk.Context, denom string) (contract common.Address, found bool) {
