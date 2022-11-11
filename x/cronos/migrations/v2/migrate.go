@@ -3,7 +3,7 @@ package v2
 import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	paramstypes "github.com/cosmos/cosmos-sdk/x/params/types"
+	"github.com/crypto-org-chain/cronos/x/cronos/exported"
 	"github.com/crypto-org-chain/cronos/x/cronos/types"
 )
 
@@ -11,7 +11,7 @@ import (
 // version 2. Specifically, it takes the parameters that are currently stored
 // and managed by the x/params modules and stores them directly into the x/cronos
 // module state.
-func Migrate(ctx sdk.Context, store sdk.KVStore, legacySubspace paramstypes.Subspace, cdc codec.BinaryCodec) error {
+func Migrate(ctx sdk.Context, store sdk.KVStore, legacySubspace exported.Subspace, cdc codec.BinaryCodec) error {
 	var currParams types.Params
 	legacySubspace.GetParamSet(ctx, &currParams)
 
