@@ -9,7 +9,7 @@
 rustPlatform.buildRustPackage rec {
   name = "hermes";
   inherit src;
-  cargoSha256 = "sha256-DBHDJlD2kTUeU0LCG5ZUij+v+lWUYRPGVvUKUYPfYQA=";
+  cargoSha256 = "sha256-OAA5KsGOdz9P+fq41tnf0TkclBe4f6Gl5Ct85uUfO24=";
   cargoBuildFlags = "-p ibc-relayer-cli";
   buildInputs = lib.optionals stdenv.isDarwin [
     darwin.apple_sdk.frameworks.Security
