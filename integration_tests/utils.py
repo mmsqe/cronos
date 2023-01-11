@@ -47,6 +47,7 @@ TEST_CONTRACTS = {
     "TestBlackListERC20": "TestBlackListERC20.sol",
     "CroBridge": "CroBridge.sol",
     "CronosGravityCancellation": "CronosGravityCancellation.sol",
+    "TestChainID": "ChainID.sol",
 }
 
 
