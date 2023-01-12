@@ -22,6 +22,7 @@ import (
 	"github.com/tendermint/tendermint/libs/log"
 	coretypes "github.com/tendermint/tendermint/rpc/core/types"
 	rpcclient "github.com/tendermint/tendermint/rpc/jsonrpc/client"
+	"google.golang.org/grpc"
 )
 
 const (
@@ -40,13 +41,13 @@ func init() {
 }
 
 // CreateCronosRPCAPIs creates extension json-rpc apis
-func CreateCronosRPCAPIs(ctx *server.Context, clientCtx client.Context, tmWSClient *rpcclient.WSClient, allowUnprotectedTxs bool, indexer ethermint.EVMTxIndexer) []rpc.API {
-	evmBackend := backend.NewBackend(ctx, ctx.Logger, clientCtx, allowUnprotectedTxs, indexer)
+func CreateCronosRPCAPIs(ctx *server.Context, clientCtx client.Context, backupGRPCClient *grpc.ClientConn, tmWSClient *rpcclient.WSClient, allowUnprotectedTxs bool, indexer ethermint.EVMTxIndexer) []rpc.API {
+	evmBackend := backend.NewBackend(ctx, ctx.Logger, clientCtx, backupGRPCClient, allowUnprotectedTxs, indexer)
 	return []rpc.API{
 		{
 			Namespace: CronosNamespace,
 			Version:   apiVersion,
-			Service:   NewCronosAPI(ctx.Logger, clientCtx, *evmBackend),
+			Service:   NewCronosAPI(ctx.Logger, clientCtx, backupGRPCClient, *evmBackend),
 			Public:    true,
 		},
 	}
@@ -56,6 +57,7 @@ func CreateCronosRPCAPIs(ctx *server.Context, clientCtx client.Context, tmWSClie
 type CronosAPI struct {
 	ctx               context.Context
 	clientCtx         client.Context
+	backupGRPCClient  *grpc.ClientConn
 	queryClient       *rpctypes.QueryClient
 	chainIDEpoch      *big.Int
 	logger            log.Logger
@@ -67,6 +69,7 @@ type CronosAPI struct {
 func NewCronosAPI(
 	logger log.Logger,
 	clientCtx client.Context,
+	backupGRPCClient *grpc.ClientConn,
 	backend backend.Backend,
 ) *CronosAPI {
 	eip155ChainID, err := ethermint.ParseChainID(clientCtx.ChainID)
@@ -76,6 +79,7 @@ func NewCronosAPI(
 	return &CronosAPI{
 		ctx:               context.Background(),
 		clientCtx:         clientCtx,
+		backupGRPCClient:  backupGRPCClient,
 		queryClient:       rpctypes.NewQueryClient(clientCtx),
 		chainIDEpoch:      eip155ChainID,
 		logger:            logger.With("client", "json-rpc"),
