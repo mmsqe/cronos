@@ -42,6 +42,7 @@ TEST_CONTRACTS = {
     "TestERC20A": "TestERC20A.sol",
     "TestERC21Source": "TestERC21Source.sol",
     "TestRevert": "TestRevert.sol",
+    "QAContract": "QAContract.sol",
     "TestERC20Utility": "TestERC20Utility.sol",
     "TestMessageCall": "TestMessageCall.sol",
     "TestBlackListERC20": "TestBlackListERC20.sol",
