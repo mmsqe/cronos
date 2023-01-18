@@ -293,6 +293,7 @@ def deploy_contract(w3, jsonfile, args=(), key=KEYS["validator"]):
     contract = w3.eth.contract(abi=info["abi"], bytecode=bytecode)
     tx = contract.constructor(*args).build_transaction({"from": acct.address})
     txreceipt = send_transaction(w3, tx, key)
+    print("txreceipt", txreceipt)
     assert txreceipt.status == 1
     address = txreceipt.contractAddress
     return w3.eth.contract(address=address, abi=info["abi"])
