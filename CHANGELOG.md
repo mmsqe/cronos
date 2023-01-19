@@ -106,6 +106,17 @@
 
 ## v0.9.0-beta2
 
+### Improvements
+
+- [cronos#702](https://github.com/crypto-org-chain/cronos/pull/702) Integrate the file state streamer.
+- [cronos#714](https://github.com/crypto-org-chain/cronos/pull/714) Add option `iavl-disable-fastnode` to disable iavl fastnode indexing migration.
+- [cronos#729](https://github.com/crypto-org-chain/cronos/pull/729) Update dependencies to recent versions.
+- [cronos#781](https://github.com/crypto-org-chain/cronos/pull/781) Add prune command.
+
+*September 13, 2022*
+
+## v0.9.0
+
 ### State Machine Breaking
 - [cronos#429](https://github.com/crypto-org-chain/cronos/pull/429) Update ethermint to main, ibc-go to v3.0.0, cosmos sdk to v0.45.4 and gravity to latest, remove v0.7.0 related upgradeHandler.
 - [cronos#532](https://github.com/crypto-org-chain/cronos/pull/532) Add SendtoChain and CancelSendToChain support from evm call.
