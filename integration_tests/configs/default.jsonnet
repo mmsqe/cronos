@@ -7,6 +7,9 @@
       mempool: {
         version: 'v1',
       },
+      consensus: {
+        timeout_commit: '2s',
+      },
     },
     'app-config': {
       'app-db-backend': 'rocksdb',
@@ -46,7 +49,7 @@
     }],
     accounts: [{
       name: 'community',
-      coins: '10000000000000000000000basetcro',
+      coins: '75000000000000000000basetcro',
       mnemonic: '${COMMUNITY_MNEMONIC}',
     }, {
       name: 'signer1',
