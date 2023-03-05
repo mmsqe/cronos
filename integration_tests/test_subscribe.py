@@ -73,8 +73,6 @@ class Client:
         return rsp["result"]
 
 
-# ChangeGreeting topic from Greeter contract calculated from event signature
-CHANGE_GREETING_TOPIC = Web3.keccak(text="ChangeGreeting(address,string)")
 # TestEvent topic from TestMessageCall contract calculated from event signature
 TEST_EVENT_TOPIC = Web3.keccak(text="TestEvent(uint256)")
 
@@ -130,7 +128,7 @@ def test_subscribe_basic(cronos: Cronos):
 
     async def logs_test(c: Client, w3, contract, address):
         sub_id = await c.subscribe("logs", {"address": address})
-        iterations = 100
+        iterations = 10000
         tx = contract.functions.test(iterations).build_transaction()
         raw_transactions = []
         for key_from in KEYS.values():
@@ -161,5 +159,5 @@ def test_subscribe_basic(cronos: Cronos):
             except asyncio.CancelledError:
                 pass
 
-    timeout = 100
+    timeout = 200
     loop.run_until_complete(asyncio.wait_for(async_test(), timeout))
