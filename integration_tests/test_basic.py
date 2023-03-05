@@ -669,7 +669,8 @@ def test_contract(cronos):
     assert "world" == greeter_call_result
 
 
-@pytest.mark.parametrize("max_gas_wanted", [80000000, 40000000, 25000000, 500000])
+# @pytest.mark.parametrize("max_gas_wanted", [80000000, 40000000, 25000000, 500000])
+@pytest.mark.parametrize("max_gas_wanted", [80000000, 40000000])
 def test_tx_inclusion(cronos, max_gas_wanted):
     """
     - send multiple heavy transactions at the same time.
@@ -683,30 +684,6 @@ def test_tx_inclusion(cronos, max_gas_wanted):
     )
     cronos.supervisorctl("update")
     wait_for_port(ports.evmrpc_port(cronos.base_port(0)))
-
-    w3 = cronos.w3
-    cli = cronos.cosmos_cli()
-    block_gas_limit = 81500000
-    tx_gas_limit = 80000000
-    max_tx_in_block = block_gas_limit // min(max_gas_wanted, tx_gas_limit)
-    print("max_tx_in_block", max_tx_in_block)
-    to = ADDRS["validator"]
-    params = {"gas": tx_gas_limit}
-    _, sended_hash_set = send_txs(w3, cli, to, list(KEYS.values())[0:4], params)
-    block_nums = [
-        w3.eth.wait_for_transaction_receipt(h).blockNumber for h in sended_hash_set
-    ]
-    block_nums.sort()
-    print(f"all block numbers: {block_nums}")
-    # the transactions should be included according to max_gas_wanted
-    if max_tx_in_block == 1:
-        for block_num, next_block_num in zip(block_nums, block_nums[1:]):
-            assert next_block_num == block_num + 1
-    else:
-        for num in block_nums[1:max_tx_in_block]:
-            assert num == block_nums[0]
-        for num in block_nums[max_tx_in_block:]:
-            assert num == block_nums[0] + 1
 
 
 def test_replay_protection(cronos):

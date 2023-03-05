@@ -162,5 +162,5 @@ def test_subscribe_basic(cronos: Cronos):
             except asyncio.CancelledError:
                 pass
 
-    timeout = 200
+    timeout = 100
     loop.run_until_complete(asyncio.wait_for(async_test(), timeout))
