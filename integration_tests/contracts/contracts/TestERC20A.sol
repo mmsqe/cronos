@@ -11,4 +11,14 @@ contract TestERC20A is ERC20 {
 	function test_native_transfer(uint amount) public {
 		emit __CronosSendToAccount(msg.sender, amount);
 	}
+
+	// 0x9ffb86a5
+    function revertWithMsg() public pure {
+        revert("Function has been reverted");
+    }
+
+    // 0x3246485d
+    function revertWithoutMsg() public pure {
+        revert();
+    }
 }

@@ -1,11 +1,7 @@
 import pytest
 import web3
 
-from .utils import (
-    ADDRS,
-    CONTRACTS,
-    deploy_contract,
-)
+from .utils import ADDRS, CONTRACTS, deploy_contract
 
 
 def test_estimate_gas(cronos):
@@ -15,10 +11,9 @@ def test_estimate_gas(cronos):
         w3,
         CONTRACTS["TestERC20A"],
     )
-    with pytest.raises(web3.exceptions.ContractLogicError) as exc:
-        w3.eth.estimate_gas({
-            "from": validator,
-            "to": erc20.address,
-            "data": "0x3246485d" # revert method
-        }, block_identifier="latest")
-    assert "execution reverted" in str(exc)
+    # revert methods
+    for data in ["0x9ffb86a5", "0x3246485d"]:
+        with pytest.raises(web3.exceptions.ContractLogicError) as exc:
+            params = {"from": validator, "to": erc20.address, "data": data}
+            w3.eth.estimate_gas(params, block_identifier="latest")
+        assert "execution reverted" in str(exc)
