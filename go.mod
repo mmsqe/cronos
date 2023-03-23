@@ -201,7 +201,7 @@ replace (
 	github.com/cosmos/cosmos-sdk => github.com/cosmos/cosmos-sdk v0.46.11
 	github.com/crypto-org-chain/cronos/versiondb => ./versiondb
 	github.com/ethereum/go-ethereum => github.com/crypto-org-chain/go-ethereum v1.10.19-deepcopy-jumptable
-	github.com/evmos/ethermint => github.com/mmsqe/ethermint v0.6.1-0.20230323065301-87b1f6c0351b
+	github.com/evmos/ethermint => github.com/mmsqe/ethermint v0.6.1-0.20230323131723-b4cbd16e61e9
 	// Fix upstream GHSA-h395-qcrw-5vmq vulnerability.
 	// TODO Remove it: https://github.com/cosmos/cosmos-sdk/issues/10409
 	github.com/gin-gonic/gin => github.com/gin-gonic/gin v1.7.0

@@ -1984,8 +1984,8 @@ github.com/mitchellh/pointerstructure v1.2.0 h1:O+i9nHnXS3l/9Wu7r4NrEdwA2VFTicjU
 github.com/mitchellh/pointerstructure v1.2.0/go.mod h1:BRAsLI5zgXmw97Lf6s25bs8ohIXc3tViBH44KcwB2g4=
 github.com/mitchellh/reflectwalk v1.0.0/go.mod h1:mSTlrgnPZtwu0c4WaC2kGObEpuNDbx0jmZXqmk4esnw=
 github.com/mitchellh/reflectwalk v1.0.1/go.mod h1:mSTlrgnPZtwu0c4WaC2kGObEpuNDbx0jmZXqmk4esnw=
-github.com/mmsqe/ethermint v0.6.1-0.20230323065301-87b1f6c0351b h1:A+SOGzhYWiyno9LyE6iv1CguHyafYfFOaIbUPMQIq/c=
-github.com/mmsqe/ethermint v0.6.1-0.20230323065301-87b1f6c0351b/go.mod h1:bdTfcX7NI6xA6tno56qK8yq++DXm6goFJuQcBwh9bdQ=
+github.com/mmsqe/ethermint v0.6.1-0.20230323131723-b4cbd16e61e9 h1:F+/lYnmmvEGIINxB8eeZL9mnOIfcQOdE4uQ+Xo4EztY=
+github.com/mmsqe/ethermint v0.6.1-0.20230323131723-b4cbd16e61e9/go.mod h1:bdTfcX7NI6xA6tno56qK8yq++DXm6goFJuQcBwh9bdQ=
 github.com/moby/buildkit v0.8.1/go.mod h1:/kyU1hKy/aYCuP39GZA9MaKioovHku57N6cqlKZIaiQ=
 github.com/moby/buildkit v0.10.4/go.mod h1:Yajz9vt1Zw5q9Pp4pdb3TCSUXJBIroIQGQ3TTs/sLug=
 github.com/moby/locker v1.0.1/go.mod h1:S7SDdo5zpBK84bzzVlKr2V0hz+7x9hWbYC/kq7oQppc=
