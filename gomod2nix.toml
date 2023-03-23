@@ -171,9 +171,9 @@ schema = 3
     hash = "sha256-QKuYnEXXrnHPPHk/Xc9ocez2Jheo/0IOOa1IQaMH61c="
     replaced = "github.com/crypto-org-chain/go-ethereum"
   [mod."github.com/evmos/ethermint"]
-    version = "v0.20.9-cronos.0.20230315032257-cb741e1d8196"
-    hash = "sha256-X9c/qdOtaleOzzVxQZaGow0Evoo5nkK7TNgxIXZBKv0="
-    replaced = "github.com/crypto-org-chain/ethermint"
+    version = "v0.6.1-0.20230323065301-87b1f6c0351b"
+    hash = "sha256-nCSvSFXtVTABOEDeBJWgIRyQo3AR+qPzQtZUJwoUGYs="
+    replaced = "github.com/mmsqe/ethermint"
   [mod."github.com/felixge/httpsnoop"]
     version = "v1.0.2"
     hash = "sha256-hj6FZQ1fDAV+1wGIViAt8XaAkWZ1I5vJzgjIJa7XRBA="
@@ -218,8 +218,8 @@ schema = 3
     version = "v0.0.0-20210331224755-41bb18bfe9da"
     hash = "sha256-7Gs7CS9gEYZkbu5P4hqPGBpeGZWC64VDwraSKFF+VR0="
   [mod."github.com/golang/protobuf"]
-    version = "v1.5.2"
-    hash = "sha256-IVwooaIo46iq7euSSVWTBAdKd+2DUaJ67MtBao1DpBI="
+    version = "v1.5.3"
+    hash = "sha256-svogITcP4orUIsJFjMtp+Uv1+fKJv2Q5Zwf2dMqnpOQ="
   [mod."github.com/golang/snappy"]
     version = "v0.0.4"
     hash = "sha256-Umx+5xHAQCN/Gi4HbtMhnDCSPFAXSsjVbXd8n5LhjAA="
@@ -538,14 +538,14 @@ schema = 3
     version = "v1.6.7"
     hash = "sha256-zIxGRHiq4QBvRqkrhMGMGCaVL4iM4TtlYpAi/hrivS4="
   [mod."google.golang.org/genproto"]
-    version = "v0.0.0-20230306155012-7f2fa6fef1f4"
-    hash = "sha256-mFnDrRD0B/fL+om/wkU/6ODFMzjaoeyoWy0vsmzQh1I="
+    version = "v0.0.0-20230322174352-cde4c949918d"
+    hash = "sha256-ZbIGPrAxXT3xt8EchfTnf9fXEHX6wPkTMmncKVK/YeM="
   [mod."google.golang.org/grpc"]
     version = "v1.53.0"
     hash = "sha256-LkB13k1JaQ7e4nGpCoEA9q4T8oIV0KvkFIDZmHhDr08="
   [mod."google.golang.org/protobuf"]
-    version = "v1.28.2-0.20220831092852-f930b1dc76e8"
-    hash = "sha256-li5hXlXwTJ5LIZ8bVki1AZ6UFI2gXHl33JwdX1dOrtM="
+    version = "v1.30.0"
+    hash = "sha256-Y07NKhSuJQ2w7F7MAINQyBf+/hdMHOrxwA3B4ljQQKs="
   [mod."gopkg.in/ini.v1"]
     version = "v1.67.0"
     hash = "sha256-V10ahGNGT+NLRdKUyRg1dos5RxLBXBk1xutcnquc/+4="
