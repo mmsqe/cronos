@@ -431,8 +431,6 @@ github.com/creack/pty v1.1.7/go.mod h1:lj5s0c3V2DBrqTV7llrYr5NG6My20zk30Fl46Y7Do
 github.com/creack/pty v1.1.9/go.mod h1:oKZEueFk5CKHvIhNR5MUki03XCEU+Q6VDXinZuGJ33E=
 github.com/crypto-org-chain/cometbft-db v0.0.0-20230412133340-ac70df4b45f6 h1:d4h4Ki1UE/LF6CKwYEm3OZ+HIBCrzSmOokG1vce0O98=
 github.com/crypto-org-chain/cometbft-db v0.0.0-20230412133340-ac70df4b45f6/go.mod h1:hF5aclS++7WrW8USOA3zPeKI0CuzwUD2TPYug25ANlQ=
-github.com/crypto-org-chain/ethermint v0.20.10-cronos h1:TOQgelSAFKOuda4oWeU9CX18V59WDJxhil0taDKQEiA=
-github.com/crypto-org-chain/ethermint v0.20.10-cronos/go.mod h1:IOoPb0Pev7xanCu3IVp4HU5NoEEt3kI7vRD4ED9yOsQ=
 github.com/crypto-org-chain/go-ethereum v1.10.19-deepcopy-jumptable h1:VQLW0R8t9DcC/HvQZO1i0mIWjJfAezhI8lLUCholP0M=
 github.com/crypto-org-chain/go-ethereum v1.10.19-deepcopy-jumptable/go.mod h1:IJBNMtzKcNHPtllYihy6BL2IgK1u+32JriaTbdt4v+w=
 github.com/crypto-org-chain/go-ethereum-hdwallet v0.1.2 h1:Qu2GMavGHCcomdVWmZej76JpOO6uvII6IpPDdJUG+Qo=
@@ -984,6 +982,8 @@ github.com/mitchellh/mapstructure v1.5.0 h1:jeMsZIYE/09sWLaz43PL7Gy6RuMjD2eJVyua
 github.com/mitchellh/mapstructure v1.5.0/go.mod h1:bFUtVrKA4DC2yAKiSyO/QUcy7e+RRV2QTWOzhPopBRo=
 github.com/mitchellh/pointerstructure v1.2.0 h1:O+i9nHnXS3l/9Wu7r4NrEdwA2VFTicjUEN1uBnDo34A=
 github.com/mitchellh/pointerstructure v1.2.0/go.mod h1:BRAsLI5zgXmw97Lf6s25bs8ohIXc3tViBH44KcwB2g4=
+github.com/mmsqe/ethermint v0.6.5-0.20230510012725-6f1dd50e7a9d h1:nv6KKFmHAMnrasGhA2vCKMkfico8gs/khJfRBZ/Y9as=
+github.com/mmsqe/ethermint v0.6.5-0.20230510012725-6f1dd50e7a9d/go.mod h1:IOoPb0Pev7xanCu3IVp4HU5NoEEt3kI7vRD4ED9yOsQ=
 github.com/modern-go/concurrent v0.0.0-20180228061459-e0a39a4cb421/go.mod h1:6dJC0mAP4ikYIbvyc7fijjWJddQyLn8Ig3JB5CqoB9Q=
 github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd h1:TRLaZ9cD/w8PVh93nsPXa1VrQ6jlwL5oN8l14QlcNfg=
 github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd/go.mod h1:6dJC0mAP4ikYIbvyc7fijjWJddQyLn8Ig3JB5CqoB9Q=
