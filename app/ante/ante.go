@@ -31,13 +31,6 @@ func NewAnteHandler(options HandlerOptions) (sdk.AnteHandler, error) {
 					panic(err)
 				}
 				accountToCheck = acc
-			case *types.MsgTurnBridge:
-				permissionToCheck = keeper.CanTurnBridge
-				acc, err := sdk.AccAddressFromBech32(v.Sender)
-				if err != nil {
-					panic(err)
-				}
-				accountToCheck = acc
 			}
 
 			if !options.CronosKeeper.HasPermission(ctx, accountToCheck, permissionToCheck) {

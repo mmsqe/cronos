@@ -238,7 +238,7 @@ func (a appCreator) newApp(logger log.Logger, db dbm.DB, traceStore io.Writer, a
 
 	baseappOptions := server.DefaultBaseappOptions(appOpts)
 	return app.New(
-		logger, db, traceStore, true, false, skipUpgradeHeights,
+		logger, db, traceStore, true, skipUpgradeHeights,
 		cast.ToString(appOpts.Get(flags.FlagHome)),
 		cast.ToUint(appOpts.Get(server.FlagInvCheckPeriod)),
 		a.encCfg,
@@ -266,7 +266,6 @@ func (a appCreator) appExport(
 			db,
 			traceStore,
 			false,
-			false,
 			map[int64]bool{},
 			homePath,
 			uint(1),
@@ -284,7 +283,6 @@ func (a appCreator) appExport(
 			db,
 			traceStore,
 			true,
-			false,
 			map[int64]bool{},
 			homePath,
 			uint(1),

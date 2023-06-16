@@ -119,10 +119,6 @@ import (
 	feemarketkeeper "github.com/evmos/ethermint/x/feemarket/keeper"
 	feemarkettypes "github.com/evmos/ethermint/x/feemarket/types"
 
-	"github.com/peggyjv/gravity-bridge/module/v2/x/gravity"
-	gravitykeeper "github.com/peggyjv/gravity-bridge/module/v2/x/gravity/keeper"
-	gravitytypes "github.com/peggyjv/gravity-bridge/module/v2/x/gravity/types"
-
 	// this line is used by starport scaffolding # stargate/app/moduleImport
 
 	memiavlrootmulti "github.com/crypto-org-chain/cronos/store/rootmulti"
@@ -191,7 +187,6 @@ var (
 		ibctransfertypes.ModuleName:    {authtypes.Minter, authtypes.Burner},
 		ibcfeetypes.ModuleName:         nil,
 		evmtypes.ModuleName:            {authtypes.Minter, authtypes.Burner}, // used for secure addition and subtraction of balance using module account
-		gravitytypes.ModuleName:        {authtypes.Minter, authtypes.Burner},
 		cronostypes.ModuleName:         {authtypes.Minter, authtypes.Burner},
 	}
 	// Module configurator
@@ -234,13 +229,12 @@ func GenModuleBasics() module.BasicManager {
 		evm.AppModuleBasic{},
 		feemarket.AppModuleBasic{},
 		// this line is used by starport scaffolding # stargate/app/moduleBasic
-		gravity.AppModuleBasic{},
 		cronos.AppModuleBasic{},
 	}
 	return module.NewBasicManager(basicModules...)
 }
 
-func StoreKeys(skipGravity bool) (
+func StoreKeys() (
 	map[string]*storetypes.KVStoreKey,
 	map[string]*storetypes.MemoryStoreKey,
 	map[string]*storetypes.TransientStoreKey,
@@ -258,9 +252,6 @@ func StoreKeys(skipGravity bool) (
 		evmtypes.StoreKey, feemarkettypes.StoreKey,
 		// this line is used by starport scaffolding # stargate/app/storeKey
 		cronostypes.StoreKey,
-	}
-	if !skipGravity {
-		storeKeys = append(storeKeys, gravitytypes.StoreKey)
 	}
 	keys := sdk.NewKVStoreKeys(storeKeys...)
 
@@ -315,9 +306,6 @@ type App struct {
 	EvmKeeper       *evmkeeper.Keeper
 	FeeMarketKeeper feemarketkeeper.Keeper
 
-	// Gravity module
-	GravityKeeper gravitykeeper.Keeper
-
 	// this line is used by starport scaffolding # stargate/app/keeperDeclaration
 
 	CronosKeeper cronoskeeper.Keeper
@@ -335,7 +323,7 @@ type App struct {
 // New returns a reference to an initialized chain.
 // NewSimApp returns a reference to an initialized SimApp.
 func New(
-	logger log.Logger, db dbm.DB, traceStore io.Writer, loadLatest, skipGravity bool, skipUpgradeHeights map[int64]bool,
+	logger log.Logger, db dbm.DB, traceStore io.Writer, loadLatest bool, skipUpgradeHeights map[int64]bool,
 	homePath string, invCheckPeriod uint, encodingConfig appparams.EncodingConfig,
 	// this line is used by starport scaffolding # stargate/app/newArgument
 	appOpts servertypes.AppOptions, baseAppOptions ...func(*baseapp.BaseApp),
@@ -351,7 +339,7 @@ func New(
 	bApp.SetVersion(version.Version)
 	bApp.SetInterfaceRegistry(interfaceRegistry)
 
-	keys, memKeys, tkeys := StoreKeys(skipGravity)
+	keys, memKeys, tkeys := StoreKeys()
 
 	// load state streaming if enabled
 	if _, _, err := streaming.LoadStreamingServices(bApp, appOpts, appCodec, keys); err != nil {
@@ -387,7 +375,7 @@ func New(
 		memKeys:           memKeys,
 	}
 
-	app.ParamsKeeper = initParamsKeeper(appCodec, cdc, keys[paramstypes.StoreKey], tkeys[paramstypes.TStoreKey], skipGravity)
+	app.ParamsKeeper = initParamsKeeper(appCodec, cdc, keys[paramstypes.StoreKey], tkeys[paramstypes.TStoreKey])
 
 	// set the BaseApp's parameter store
 	bApp.SetParamStore(app.ParamsKeeper.Subspace(baseapp.Paramspace).WithKeyTable(paramstypes.ConsensusParamsKeyTable()))
@@ -477,23 +465,6 @@ func New(
 		nil, geth.NewEVM, tracer,
 	)
 
-	var gravityKeeper gravitykeeper.Keeper
-	if !skipGravity {
-		gravityKeeper = gravitykeeper.NewKeeper(
-			appCodec,
-			keys[gravitytypes.StoreKey],
-			app.GetSubspace(gravitytypes.ModuleName),
-			app.AccountKeeper,
-			stakingKeeper,
-			app.BankKeeper,
-			app.SlashingKeeper,
-			app.DistrKeeper,
-			sdk.DefaultPowerReduction,
-			make(map[string]string),
-			make(map[string]string),
-		)
-	}
-
 	// this line is used by starport scaffolding # stargate/app/keeperDefinition
 
 	app.CronosKeeper = *cronoskeeper.NewKeeper(
@@ -502,7 +473,6 @@ func New(
 		keys[cronostypes.MemStoreKey],
 		app.BankKeeper,
 		app.TransferKeeper,
-		gravityKeeper,
 		app.EvmKeeper,
 		app.AccountKeeper,
 		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
@@ -538,16 +508,8 @@ func New(
 		&stakingKeeper, govRouter, app.MsgServiceRouter(), govConfig,
 	)
 
-	var gravitySrv gravitytypes.MsgServer
-	if !skipGravity {
-		app.GravityKeeper = *gravityKeeper.SetHooks(app.CronosKeeper)
-		gravitySrv = gravitykeeper.NewMsgServerImpl(app.GravityKeeper)
-	}
-
 	app.EvmKeeper.SetHooks(cronoskeeper.NewLogProcessEvmHook(
 		evmhandlers.NewSendToAccountHandler(app.BankKeeper, app.CronosKeeper),
-		evmhandlers.NewSendToEvmChainHandler(gravitySrv, app.BankKeeper, app.CronosKeeper),
-		evmhandlers.NewCancelSendToEvmChainHandler(gravitySrv, app.CronosKeeper, app.GravityKeeper),
 		evmhandlers.NewSendToIbcHandler(app.BankKeeper, app.CronosKeeper),
 		evmhandlers.NewSendCroToIbcHandler(app.BankKeeper, app.CronosKeeper),
 		evmhandlers.NewSendToIbcV2Handler(app.BankKeeper, app.CronosKeeper),
@@ -558,9 +520,6 @@ func New(
 	hooks := []stakingtypes.StakingHooks{
 		app.DistrKeeper.Hooks(),
 		app.SlashingKeeper.Hooks(),
-	}
-	if !skipGravity {
-		hooks = append(hooks, app.GravityKeeper.Hooks())
 	}
 	app.StakingKeeper = *stakingKeeper.SetHooks(stakingtypes.NewMultiStakingHooks(hooks...))
 
@@ -683,15 +642,6 @@ func New(
 		upgradetypes.ModuleName,
 		vestingtypes.ModuleName,
 		cronostypes.ModuleName,
-	}
-
-	if !skipGravity {
-		modules = append(modules,
-			gravity.NewAppModule(appCodec, app.GravityKeeper, app.AccountKeeper, app.BankKeeper),
-		)
-		beginBlockersOrder = append(beginBlockersOrder, gravitytypes.ModuleName)
-		endBlockersOrder = append(endBlockersOrder, gravitytypes.ModuleName)
-		initGenesisOrder = append(initGenesisOrder, gravitytypes.ModuleName)
 	}
 
 	app.mm = module.NewManager(modules...)
@@ -957,7 +907,7 @@ func GetMaccPerms() map[string][]string {
 }
 
 // initParamsKeeper init params keeper and its subspaces
-func initParamsKeeper(appCodec codec.BinaryCodec, legacyAmino *codec.LegacyAmino, key, tkey storetypes.StoreKey, skipGravity bool) paramskeeper.Keeper {
+func initParamsKeeper(appCodec codec.BinaryCodec, legacyAmino *codec.LegacyAmino, key, tkey storetypes.StoreKey) paramskeeper.Keeper {
 	paramsKeeper := paramskeeper.NewKeeper(appCodec, legacyAmino, key, tkey)
 
 	paramsKeeper.Subspace(authtypes.ModuleName)
@@ -972,9 +922,6 @@ func initParamsKeeper(appCodec codec.BinaryCodec, legacyAmino *codec.LegacyAmino
 	paramsKeeper.Subspace(ibchost.ModuleName)
 	paramsKeeper.Subspace(evmtypes.ModuleName)
 	paramsKeeper.Subspace(feemarkettypes.ModuleName)
-	if !skipGravity {
-		paramsKeeper.Subspace(gravitytypes.ModuleName)
-	}
 	// this line is used by starport scaffolding # stargate/app/paramSubspace
 	paramsKeeper.Subspace(cronostypes.ModuleName).WithKeyTable(cronostypes.ParamKeyTable())
 

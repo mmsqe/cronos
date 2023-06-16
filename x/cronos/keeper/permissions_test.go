@@ -23,14 +23,6 @@ func (suite *KeeperTestSuite) TestSetAndGetPermissions() {
 	keeper.SetPermissions(suite.ctx, cosmosAddress, CanChangeTokenMapping)
 	permissions = keeper.GetPermissions(suite.ctx, cosmosAddress)
 	suite.Require().Equal(CanChangeTokenMapping, permissions)
-
-	keeper.SetPermissions(suite.ctx, cosmosAddress, CanTurnBridge)
-	permissions = keeper.GetPermissions(suite.ctx, cosmosAddress)
-	suite.Require().Equal(CanTurnBridge, permissions)
-
-	keeper.SetPermissions(suite.ctx, cosmosAddress, All)
-	permissions = keeper.GetPermissions(suite.ctx, cosmosAddress)
-	suite.Require().Equal(All, permissions)
 }
 
 func (suite *KeeperTestSuite) TestHasPermissions() {
@@ -47,17 +39,6 @@ func (suite *KeeperTestSuite) TestHasPermissions() {
 	suite.Require().Equal(true, keeper.HasPermission(suite.ctx, cosmosAddress, 0))
 
 	suite.Require().Equal(false, keeper.HasPermission(suite.ctx, cosmosAddress, CanChangeTokenMapping))
-	suite.Require().Equal(false, keeper.HasPermission(suite.ctx, cosmosAddress, CanTurnBridge))
-
 	keeper.SetPermissions(suite.ctx, cosmosAddress, CanChangeTokenMapping)
 	suite.Require().Equal(true, keeper.HasPermission(suite.ctx, cosmosAddress, CanChangeTokenMapping))
-	suite.Require().Equal(false, keeper.HasPermission(suite.ctx, cosmosAddress, CanTurnBridge))
-
-	keeper.SetPermissions(suite.ctx, cosmosAddress, CanTurnBridge)
-	suite.Require().Equal(false, keeper.HasPermission(suite.ctx, cosmosAddress, CanChangeTokenMapping))
-	suite.Require().Equal(true, keeper.HasPermission(suite.ctx, cosmosAddress, CanTurnBridge))
-
-	keeper.SetPermissions(suite.ctx, cosmosAddress, All)
-	suite.Require().Equal(true, keeper.HasPermission(suite.ctx, cosmosAddress, CanChangeTokenMapping))
-	suite.Require().Equal(true, keeper.HasPermission(suite.ctx, cosmosAddress, CanTurnBridge))
 }

@@ -25,7 +25,6 @@ func RegisterInterfaces(registry cdctypes.InterfaceRegistry) {
 		&MsgConvertVouchers{},
 		&MsgTransferTokens{},
 		&MsgUpdateTokenMapping{},
-		&MsgTurnBridge{},
 		&MsgUpdatePermissions{},
 	)
 

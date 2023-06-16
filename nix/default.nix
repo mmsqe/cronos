@@ -34,21 +34,6 @@ import sources.nixpkgs {
         };
       })
     (_: pkgs: {
-      gorc = pkgs.rustPlatform.buildRustPackage rec {
-        name = "gorc";
-        src = sources.gravity-bridge;
-        sourceRoot = "gravity-bridge-src/orchestrator";
-        cargoSha256 = "sha256-FQ43PFGbagIi+KZ6KUtjF7OClIkCqKd4pGzHaYr2Q+A=";
-        cargoBuildFlags = "-p ${name} --features ethermint";
-        buildInputs = pkgs.lib.optionals pkgs.stdenv.isDarwin
-          (with pkgs.darwin.apple_sdk.frameworks; [ CoreFoundation Security ]);
-        doCheck = false;
-        OPENSSL_NO_VENDOR = "1";
-        OPENSSL_DIR = pkgs.symlinkJoin {
-          name = "openssl";
-          paths = with pkgs.openssl; [ out dev ];
-        };
-      };
       hermes = pkgs.callPackage ./hermes.nix { src = sources.ibc-rs; };
     })
     (_: pkgs: { test-env = pkgs.callPackage ./testenv.nix { }; })

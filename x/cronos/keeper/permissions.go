@@ -10,9 +10,7 @@ import (
 // This design allows a quick and simple permission check for addresses
 // The next permission should be added before All
 const (
-	CanChangeTokenMapping uint64                                  = 1 << iota // 1
-	CanTurnBridge                                                             // 2
-	All                   = CanChangeTokenMapping | CanTurnBridge             // 3
+	CanChangeTokenMapping uint64 = 1 << iota // 1
 )
 
 func (k Keeper) SetPermissions(ctx sdk.Context, address sdk.AccAddress, permissions uint64) {

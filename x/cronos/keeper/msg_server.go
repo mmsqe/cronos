@@ -73,16 +73,6 @@ func (k msgServer) UpdateTokenMapping(goCtx context.Context, msg *types.MsgUpdat
 	return &types.MsgUpdateTokenMappingResponse{}, nil
 }
 
-// TurnBridge implements the grpc method
-func (k msgServer) TurnBridge(goCtx context.Context, msg *types.MsgTurnBridge) (*types.MsgTurnBridgeResponse, error) {
-	ctx := sdk.UnwrapSDKContext(goCtx)
-	gravityParams := k.gravityKeeper.GetParams(ctx)
-	gravityParams.BridgeActive = msg.Enable
-	k.gravityKeeper.SetParams(ctx, gravityParams)
-
-	return &types.MsgTurnBridgeResponse{}, nil
-}
-
 func (k msgServer) UpdateParams(goCtx context.Context, msg *types.MsgUpdateParams) (*types.MsgUpdateParamsResponse, error) {
 	if msg.Authority != k.authority {
 		return nil, errors.Wrapf(govtypes.ErrInvalidSigner, "invalid authority; expected %s, got %s", k.authority, msg.Authority)

@@ -658,8 +658,6 @@ paths:
             properties:
               can_change_token_mapping:
                 type: boolean
-              can_turn_bridge:
-                type: boolean
             description: >-
               QueryPermissionsResponse is the response type for the
               Query/Permissions RPC method.
@@ -40779,8 +40777,6 @@ definitions:
     type: object
     properties:
       can_change_token_mapping:
-        type: boolean
-      can_turn_bridge:
         type: boolean
     description: >-
       QueryPermissionsResponse is the response type for the Query/Permissions

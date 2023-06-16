@@ -409,10 +409,6 @@ schema = 3
   [mod."github.com/olekukonko/tablewriter"]
     version = "v0.0.5"
     hash = "sha256-/5i70IkH/qSW5KjGzv8aQNKh9tHoz98tqtL0K2DMFn4="
-  [mod."github.com/peggyjv/gravity-bridge/module/v2"]
-    version = "v2.0.1-0.20230126051749-d984b1562242"
-    hash = "sha256-3zEJ6PWt4eucOPPnY3OYNqJtgjUXU/AmRlstCfJLyCk="
-    replaced = "github.com/crypto-org-chain/gravity-bridge/module/v2"
   [mod."github.com/pelletier/go-toml"]
     version = "v1.9.5"
     hash = "sha256-RJ9K1BTId0Mled7S66iGgxHkZ5JKEIsrrNaEfM8aImc="

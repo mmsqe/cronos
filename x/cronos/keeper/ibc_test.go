@@ -298,7 +298,6 @@ func (suite *KeeperTestSuite) TestIbcTransferCoins() {
 				suite.app.GetKey(types.MemStoreKey),
 				suite.app.BankKeeper,
 				keepertest.IbcKeeperMock{},
-				suite.app.GravityKeeper,
 				suite.app.EvmKeeper,
 				suite.app.AccountKeeper,
 				authtypes.NewModuleAddress(govtypes.ModuleName).String(),

@@ -30,8 +30,6 @@ type (
 		bankKeeper types.BankKeeper
 		// ibc transfer operations
 		transferKeeper types.TransferKeeper
-		// gravity bridge keeper
-		gravityKeeper types.GravityKeeper
 		// ethermint evm keeper
 		evmKeeper types.EvmKeeper
 		// account keeper
@@ -51,7 +49,6 @@ func NewKeeper(
 	memKey storetypes.StoreKey,
 	bankKeeper types.BankKeeper,
 	transferKeeper types.TransferKeeper,
-	gravityKeeper types.GravityKeeper,
 	evmKeeper types.EvmKeeper,
 	accountKeeper types.AccountKeeper,
 	authority string,
@@ -67,7 +64,6 @@ func NewKeeper(
 		memKey:         memKey,
 		bankKeeper:     bankKeeper,
 		transferKeeper: transferKeeper,
-		gravityKeeper:  gravityKeeper,
 		evmKeeper:      evmKeeper,
 		accountKeeper:  accountKeeper,
 		authority:      authority,

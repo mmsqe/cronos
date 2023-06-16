@@ -139,12 +139,10 @@ func (k Keeper) Permissions(goCtx context.Context, req *types.QueryPermissionsRe
 	if admin == acc.String() {
 		return &types.QueryPermissionsResponse{
 			CanChangeTokenMapping: true,
-			CanTurnBridge:         true,
 		}, nil
 	}
 	permissions := k.GetPermissions(ctx, acc)
 	return &types.QueryPermissionsResponse{
 		CanChangeTokenMapping: CanChangeTokenMapping == (permissions & CanChangeTokenMapping),
-		CanTurnBridge:         CanTurnBridge == (permissions & CanTurnBridge),
 	}, nil
 }

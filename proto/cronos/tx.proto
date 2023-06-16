@@ -25,9 +25,6 @@ service Msg {
   rpc UpdateTokenMapping(MsgUpdateTokenMapping)
       returns (MsgUpdateTokenMappingResponse);
 
-  // TurnBridge defines a method to disable or enable the gravity bridge
-  rpc TurnBridge(MsgTurnBridge) returns (MsgTurnBridgeResponse);
-
   // UpdateParams defines a method to update cronos module params
   rpc UpdateParams(MsgUpdateParams) returns (MsgUpdateParamsResponse);
 
@@ -74,15 +71,6 @@ message MsgUpdateTokenMapping {
 
 // MsgUpdateTokenMappingResponse defines the response type
 message MsgUpdateTokenMappingResponse {}
-
-// MsgTurnBridge defines the request type
-message MsgTurnBridge {
-  string sender = 1;
-  bool enable = 2;
-}
-
-// MsgTurnBridgegResponse defines the response type
-message MsgTurnBridgeResponse {}
 
 // MsgUpdateParams defines the request type for updating cronos params.
 message MsgUpdateParams {

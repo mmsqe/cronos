@@ -99,7 +99,6 @@ message QueryPermissionsRequest {
 // QueryPermissionsResponse is the response type for the Query/Permissions RPC method.
 message QueryPermissionsResponse {
     bool can_change_token_mapping = 1;
-    bool can_turn_bridge = 2;
 }
 
 // this line is used by starport scaffolding # 3

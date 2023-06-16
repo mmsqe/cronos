@@ -12,7 +12,6 @@ const (
 	TypeMsgTransferTokens     = "TransferTokens"
 	TypeMsgUpdateTokenMapping = "UpdateTokenMapping"
 	TypeMsgUpdateParams       = "UpdateParams"
-	TypeMsgTurnBridge         = "TurnBridge"
 	TypeMsgUpdatePermissions  = "UpdatePermissions"
 )
 
@@ -21,7 +20,6 @@ var (
 	_ sdk.Msg = &MsgTransferTokens{}
 	_ sdk.Msg = &MsgUpdateTokenMapping{}
 	_ sdk.Msg = &MsgUpdateParams{}
-	_ sdk.Msg = &MsgTurnBridge{}
 	_ sdk.Msg = &MsgUpdatePermissions{}
 )
 
@@ -179,49 +177,6 @@ func (msg MsgUpdateTokenMapping) Type() string {
 
 // GetSignBytes ...
 func (msg *MsgUpdateTokenMapping) GetSignBytes() []byte {
-	bz := ModuleCdc.MustMarshalJSON(msg)
-	return sdk.MustSortJSON(bz)
-}
-
-// NewMsgTurnBridge ...
-func NewMsgTurnBridge(admin string, enable bool) *MsgTurnBridge {
-	return &MsgTurnBridge{
-		Sender: admin,
-		Enable: enable,
-	}
-}
-
-// GetSigners ...
-func (msg *MsgTurnBridge) GetSigners() []sdk.AccAddress {
-	sender, err := sdk.AccAddressFromBech32(msg.Sender)
-	if err != nil {
-		panic(err)
-	}
-	return []sdk.AccAddress{sender}
-}
-
-// ValidateBasic ...
-func (msg *MsgTurnBridge) ValidateBasic() error {
-	_, err := sdk.AccAddressFromBech32(msg.Sender)
-	if err != nil {
-		return errors.Wrapf(sdkerrors.ErrInvalidAddress, "invalid sender address (%s)", err)
-	}
-
-	return nil
-}
-
-// Route ...
-func (msg MsgTurnBridge) Route() string {
-	return RouterKey
-}
-
-// Type ...
-func (msg MsgTurnBridge) Type() string {
-	return TypeMsgTurnBridge
-}
-
-// GetSignBytes ...
-func (msg *MsgTurnBridge) GetSignBytes() []byte {
 	bz := ModuleCdc.MustMarshalJSON(msg)
 	return sdk.MustSortJSON(bz)
 }
