@@ -18,18 +18,9 @@ done
 
 echo "Generate cosmos swagger files"
 
-proto_dir="../third_party/proto"
-proto_dirs=$(find "${proto_dir}/ethermint" "${proto_dir}/ibc" -path -prune -o -name '*.proto' -print0 | xargs -0 -n1 dirname | sort | uniq)
-for dir in $proto_dirs; do
-  # generate swagger files (filter query files)
-  query_file=$(find "${dir}" -maxdepth 1 \( -name 'query.proto' -o -name 'service.proto' \))
-  if [[ ! -z "$query_file" ]]; then
-    echo "$query_file"
-    buf generate --template buf.gen.swagger.yaml "$query_file"
-  fi
-done
-
 buf generate --template buf.gen.swagger.yaml "buf.build/cosmos/cosmos-sdk:954f7b05f38440fc8250134b15adec47"
+buf generate --template buf.gen.swagger.yaml "buf.build/mmsqe/ibc:3c33481b6f084a9582a5d14c1ca24d75"
+buf generate --template buf.gen.swagger.yaml "buf.build/mmsqe/ethermint:231eac4fe65f4738baa30bd985bfb831"
 
 cd ..
 

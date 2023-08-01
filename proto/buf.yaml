@@ -8,6 +8,10 @@ name: buf.build/crypto-org-chain/cronos
 deps:
   - buf.build/cosmos/cosmos-sdk:954f7b05f38440fc8250134b15adec47
   - buf.build/cosmos/cosmos-proto
+  - buf.build/mmsqe/ethermint:231eac4fe65f4738baa30bd985bfb831
+  - buf.build/mmsqe/ibc:3c33481b6f084a9582a5d14c1ca24d75
+  - buf.build/mmsqe/iavl:6e4cebfab9a24511bc98396fc1af0583
+  - buf.build/cosmos/ics23:b1abd8678aab07165efd453c96796a179eb3131f
   - buf.build/cosmos/gogo-proto
   - buf.build/googleapis/googleapis
 breaking:

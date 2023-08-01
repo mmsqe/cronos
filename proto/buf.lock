@@ -17,7 +17,27 @@ deps:
     commit: 5e5b9fdd01804356895f8f79a6f1ddc1
     digest: shake256:0b85da49e2e5f9ebc4806eae058e2f56096ff3b1c59d1fb7c190413dd15f45dd456f0b69ced9059341c80795d2b6c943de15b120a9e0308b499e43e4b5fc2952
   - remote: buf.build
+    owner: cosmos
+    repository: ics23
+    commit: 55085f7c710a45f58fa09947208eb70b
+    digest: shake256:9bf0bc495b5a11c88d163d39ef521bc4b00bc1374a05758c91d82821bdc61f09e8c2c51dda8452529bf80137f34d852561eacbe9550a59015d51cecb0dacb628
+  - remote: buf.build
     owner: googleapis
     repository: googleapis
-    commit: cc916c31859748a68fd229a3c8d7a2e8
-    digest: shake256:469b049d0eb04203d5272062636c078decefc96fec69739159c25d85349c50c34c7706918a8b216c5c27f76939df48452148cff8c5c3ae77fa6ba5c25c1b8bf8
+    commit: 711e289f6a384c4caeebaff7c6931ade
+    digest: shake256:e08fb55dad7469f69df00304eed31427d2d1576e9aab31e6bf86642688e04caaf0372f15fe6974cf79432779a635b3ea401ca69c943976dc42749524e4c25d94
+  - remote: buf.build
+    owner: mmsqe
+    repository: ethermint
+    commit: 231eac4fe65f4738baa30bd985bfb831
+    digest: shake256:8b69768d8aa892712942d1c5db9d0bec24ede8838cfbf058559db17ed60f1a1d1d3c8fd0f56e2abf7a9d3476ce09f672557edcc0914cd8631ee191b77032d79c
+  - remote: buf.build
+    owner: mmsqe
+    repository: iavl
+    commit: 6e4cebfab9a24511bc98396fc1af0583
+    digest: shake256:2c380b08e7518db70ce1c373e0171c70d940ed6832c1a988704200c9803172c8e87afec1dc5867538acb5bfad79bb9231b6269097239d16b03463b196b38b1e6
+  - remote: buf.build
+    owner: mmsqe
+    repository: ibc
+    commit: 3c33481b6f084a9582a5d14c1ca24d75
+    digest: shake256:f9f7efdeeb4a14292b118456f9bdd016384842ae0c7cdabf06e08805e5da2bfedc0aaa719e71c3f1e0af7c103eac6de2e52a0792f974c0caf89a6ecf06461c4b
