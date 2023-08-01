@@ -105,7 +105,7 @@ func TestFullAppSimulation(t *testing.T) {
 		require.NoError(t, os.RemoveAll(dir))
 	}()
 
-	app, err := NewSimApp(logger, db, fauxMerkleModeOpt)
+	app, err := NewSimApp(logger, db, fauxMerkleModeOpt, baseapp.SetChainID(SimAppChainID))
 	require.NoError(t, err)
 	require.Equal(t, Name, app.Name())
 
@@ -147,7 +147,7 @@ func TestAppImportExport(t *testing.T) {
 		require.NoError(t, os.RemoveAll(dir))
 	}()
 
-	app, err := NewSimApp(logger, db, fauxMerkleModeOpt)
+	app, err := NewSimApp(logger, db, fauxMerkleModeOpt, baseapp.SetChainID(SimAppChainID))
 	require.NoError(t, err)
 	require.Equal(t, Name, app.Name())
 
@@ -189,7 +189,7 @@ func TestAppImportExport(t *testing.T) {
 		require.NoError(t, os.RemoveAll(newDir))
 	}()
 
-	newApp, err := NewSimApp(log.NewNopLogger(), newDB, fauxMerkleModeOpt)
+	newApp, err := NewSimApp(log.NewNopLogger(), newDB, fauxMerkleModeOpt, baseapp.SetChainID(SimAppChainID))
 	require.NoError(t, err)
 	require.Equal(t, Name, newApp.Name())
 
@@ -271,7 +271,7 @@ func TestAppSimulationAfterImport(t *testing.T) {
 		require.NoError(t, os.RemoveAll(dir))
 	}()
 
-	app, err := NewSimApp(logger, db, fauxMerkleModeOpt)
+	app, err := NewSimApp(logger, db, fauxMerkleModeOpt, baseapp.SetChainID(SimAppChainID))
 	require.NoError(t, err)
 	require.Equal(t, Name, app.Name())
 
@@ -317,7 +317,7 @@ func TestAppSimulationAfterImport(t *testing.T) {
 		require.NoError(t, os.RemoveAll(newDir))
 	}()
 
-	newApp, err := NewSimApp(log.NewNopLogger(), newDB, fauxMerkleModeOpt)
+	newApp, err := NewSimApp(log.NewNopLogger(), newDB, fauxMerkleModeOpt, baseapp.SetChainID(SimAppChainID))
 	require.NoError(t, err)
 	require.Equal(t, Name, newApp.Name())
 
@@ -371,7 +371,7 @@ func TestAppStateDeterminism(t *testing.T) {
 			}
 
 			db := dbm.NewMemDB()
-			app, err := NewSimApp(logger, db, interBlockCacheOpt())
+			app, err := NewSimApp(logger, db, interBlockCacheOpt(), baseapp.SetChainID(SimAppChainID))
 			require.NoError(t, err)
 
 			fmt.Printf(

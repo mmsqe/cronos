@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"math/rand"
 
 	// this line is used by starport scaffolding # 1
 
@@ -180,19 +179,9 @@ func (am AppModule) EndBlock(_ sdk.Context, _ abci.RequestEndBlock) []abci.Valid
 	return []abci.ValidatorUpdate{}
 }
 
-// RandomizedParams creates randomized cronos param changes for the simulator.
-func (AppModule) RandomizedParams(r *rand.Rand) []simtypes.LegacyParamChange {
-	return nil
-}
-
 // RegisterStoreDecoder registers a decoder for cronos module's types
 func (am AppModule) RegisterStoreDecoder(sdr sdk.StoreDecoderRegistry) {
 	sdr[types.StoreKey] = simulation.NewDecodeStore()
-}
-
-// ProposalContents doesn't return any content functions for governance proposals.
-func (AppModule) ProposalContents(simState module.SimulationState) []simtypes.WeightedProposalContent {
-	return nil
 }
 
 // GenerateGenesisState creates a randomized GenState of the cronos module.
