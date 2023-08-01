@@ -840,10 +840,10 @@ func (app *App) setAnteHandler(txConfig client.TxConfig, maxGasWanted uint64) {
 		MaxTxGasWanted:         maxGasWanted,
 		ExtensionOptionChecker: ethermint.HasDynamicFeeExtensionOption,
 		TxFeeChecker:           evmante.NewDynamicFeeChecker(app.EvmKeeper),
-		DisabledAuthzMsgs: []string{
-			sdk.MsgTypeURL(&evmtypes.MsgEthereumTx{}),
-			sdk.MsgTypeURL(&vestingtypes.MsgCreateVestingAccount{}),
-		},
+		// DisabledAuthzMsgs: []string{
+		// 	sdk.MsgTypeURL(&evmtypes.MsgEthereumTx{}),
+		// 	sdk.MsgTypeURL(&vestingtypes.MsgCreateVestingAccount{}),
+		// },
 	}
 	options := ante.HandlerOptions{
 		EvmOptions:   evmOptions,
