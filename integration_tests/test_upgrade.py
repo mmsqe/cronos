@@ -184,3 +184,5 @@ def test_cosmovisor_upgrade(custom_cronos: Cronos):
             {"from": ADDRS["validator"]}
         )["gas"]
     )
+    print(custom_cronos.supervisorctl("stop", "all"))
+    print(json.loads(cli.export())["app_state"]["feeibc"])
