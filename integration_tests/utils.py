@@ -28,10 +28,10 @@ load_dotenv(Path(__file__).parent.parent / "scripts/.env")
 Account.enable_unaudited_hdwallet_features()
 ACCOUNTS = {
     "validator": Account.from_mnemonic(os.getenv("VALIDATOR1_MNEMONIC")),
-    "validator2": Account.from_mnemonic(os.getenv("VALIDATOR2_MNEMONIC")),
+    # "validator2": Account.from_mnemonic(os.getenv("VALIDATOR2_MNEMONIC")),
     "community": Account.from_mnemonic(os.getenv("COMMUNITY_MNEMONIC")),
-    "signer1": Account.from_mnemonic(os.getenv("SIGNER1_MNEMONIC")),
-    "signer2": Account.from_mnemonic(os.getenv("SIGNER2_MNEMONIC")),
+    # "signer1": Account.from_mnemonic(os.getenv("SIGNER1_MNEMONIC")),
+    # "signer2": Account.from_mnemonic(os.getenv("SIGNER2_MNEMONIC")),
 }
 KEYS = {name: account.key for name, account in ACCOUNTS.items()}
 ADDRS = {name: account.address for name, account in ACCOUNTS.items()}
