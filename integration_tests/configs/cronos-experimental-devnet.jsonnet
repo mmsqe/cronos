@@ -9,8 +9,8 @@ config {
       'app-db-backend':: super['app-db-backend'],
       'minimum-gas-prices': '100000000000basetcro',
       'json-rpc': {
-        address: '0.0.0.0:{EVMRPC_PORT}',
-        'ws-address': '0.0.0.0:{EVMRPC_PORT_WS}',
+        address: '127.0.0.1:{EVMRPC_PORT}',
+        'ws-address': '127.0.0.1:{EVMRPC_PORT_WS}',
       },
     },
     genesis+: {
