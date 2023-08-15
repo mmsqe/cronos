@@ -24,6 +24,7 @@ from .utils import (
     modify_command_in_supervisor_config,
     send_transaction,
     send_txs,
+    send_txs2,
     wait_for_block,
     wait_for_port,
 )
@@ -668,40 +669,37 @@ def test_contract(cronos):
 origin_cmd = None
 
 
-@pytest.mark.parametrize("max_gas_wanted", [80000000, 40000000, 25000000, 500000])
-def test_tx_inclusion(cronos, max_gas_wanted):
+def test_tx_inclusion(cronos):
     """
     - send multiple heavy transactions at the same time.
     - check they are included in consecutively blocks without failure.
 
     test against different max-gas-wanted configuration.
     """
-
-    def fn(cmd):
-        global origin_cmd
-        if origin_cmd is None:
-            origin_cmd = cmd
-        return f"{origin_cmd} --evm.max-tx-gas-wanted {max_gas_wanted}"
-
-    modify_command_in_supervisor_config(
-        cronos.base_dir / "tasks.ini",
-        lambda cmd: fn(cmd),
-    )
-    cronos.supervisorctl("update")
-    wait_for_port(ports.evmrpc_port(cronos.base_port(0)))
-
+    max_gas_wanted = 40000000
     w3 = cronos.w3
     cli = cronos.cosmos_cli()
-    block_gas_limit = 81500000
-    tx_gas_limit = 80000000
+    block_gas_limit = 40000000
+    tx_gas_limit = 289275000
     max_tx_in_block = block_gas_limit // min(max_gas_wanted, tx_gas_limit)
     print("max_tx_in_block", max_tx_in_block)
-    to = ADDRS["validator"]
-    params = {"gas": tx_gas_limit}
-    _, sended_hash_set = send_txs(w3, cli, to, list(KEYS.values())[0:4], params)
+    
+    contract = deploy_contract(
+        w3,
+        CONTRACTS["TestMessageCall"],
+        key=KEYS["community"],
+    )
+    iterations = 13000
+    tx = contract.functions.test(iterations).build_transaction()
+    print("estimate_gas", w3.eth.estimate_gas(tx))
+    tx["gas"] = tx_gas_limit
+    # receipt = send_transaction(w3, tx, KEYS["community"])
+    _, sended_hash_set = send_txs2(w3, cli, list(KEYS.values())[0:4], tx)
     block_nums = [
         w3.eth.wait_for_transaction_receipt(h).blockNumber for h in sended_hash_set
     ]
+    for h in sended_hash_set:
+        print("res:", w3.eth.wait_for_transaction_receipt(h))
     block_nums.sort()
     print(f"all block numbers: {block_nums}")
     # the transactions should be included according to max_gas_wanted

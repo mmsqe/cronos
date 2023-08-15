@@ -510,3 +510,20 @@ def send_txs(w3, cli, to, keys, params):
     sended_hash_set = send_raw_transactions(w3, raw_transactions)
 
     return block_num_0, sended_hash_set
+
+
+def send_txs2(w3, cli, keys, tx):
+    # use different sender accounts to be able be send concurrently
+    raw_transactions = []
+    for key_from in keys:
+        signed = sign_transaction(w3, tx, key_from)
+        raw_transactions.append(signed.rawTransaction)
+
+    # wait block update
+    block_num_0 = wait_for_new_blocks(cli, 1, sleep=0.1)
+    print(f"block number start: {block_num_0}")
+
+    # send transactions
+    sended_hash_set = send_raw_transactions(w3, raw_transactions)
+
+    return block_num_0, sended_hash_set

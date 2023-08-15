@@ -9,6 +9,9 @@
       },
     },
     'app-config': {
+      'evm': {
+        'max-tx-gas-wanted': 400000,
+      },
       'app-db-backend': 'pebbledb',
       'minimum-gas-prices': '0basetcro',
       'index-events': ['ethereum_tx.ethereumTxHash'],
@@ -61,7 +64,7 @@
       consensus_params: {
         block: {
           max_bytes: '1048576',
-          max_gas: '81500000',
+          max_gas: '40000000',
         },
       },
       app_state: {
