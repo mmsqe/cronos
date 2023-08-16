@@ -12,7 +12,7 @@
       'evm': {
         'max-tx-gas-wanted': 400000,
       },
-      'app-db-backend': 'pebbledb',
+      'app-db-backend': 'rocksdb',
       'minimum-gas-prices': '0basetcro',
       'index-events': ['ethereum_tx.ethereumTxHash'],
       'iavl-lazy-loading': true,
