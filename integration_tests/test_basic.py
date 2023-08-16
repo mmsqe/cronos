@@ -691,7 +691,7 @@ def test_tx_inclusion(cronos):
     _, sended_hash_set = send_txs2(w3, cli, list(KEYS.values())[0:4], tx)
     for h in sended_hash_set:
         res = w3.eth.wait_for_transaction_receipt(h)
-        print("res:", h.hex(), res["cumulativeGasUsed"], res["gasUsed"], res["status"])
+        print("res:", h.hex(), res["blockNumber"], res["cumulativeGasUsed"], res["gasUsed"], res["status"])
     time.sleep(30)
 
 
