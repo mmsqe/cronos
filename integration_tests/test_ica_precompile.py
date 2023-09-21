@@ -84,6 +84,16 @@ def test_call(ibc):
     amt = 1000
     timeout = 300000000000
 
+    tx = contract.functions.nativeSubmitsMsgSend(
+        connid,
+        ica_address,
+        cli_host.address(name),
+        denom,
+        f"{amt}",
+    ).build_transaction(data)
+    receipt = send_transaction(w3, tx, keys)
+    assert receipt.status == 1
+
     def submit_msgs(msgs, seq):
         generated_packet = cli_controller.ica_generate_packet_data(msgs)
         num_txs = len(cli_host.query_all_txs(ica_address)["txs"])
