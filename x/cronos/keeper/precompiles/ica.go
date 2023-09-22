@@ -174,6 +174,7 @@ func (ic *IcaContract) Run(evm *vm.EVM, contract *vm.Contract, readonly bool) ([
 		timeout := args[2].(*big.Int)
 		var icaMsgData icatypes.InterchainAccountPacketData
 		err = ic.cdc.UnmarshalJSON([]byte(data), &icaMsgData)
+		fmt.Println("mm-data", data)
 		if err != nil {
 			return nil, errors.New("fail to unmarshal packet data")
 		}
