@@ -2,8 +2,11 @@
 pragma solidity ^0.8.4;
 
 import {IICAModule} from "./ICA.sol";
+import {Base64} from "./Base64.sol";
 import {CosmosBankV1beta1MsgSend} from "./generated/cosmos/bank/v1beta1/tx.sol";
+import {CosmosTxV1beta1TxBody} from "./generated/cosmos/tx/v1beta1/tx.sol";
 import {CosmosBaseV1beta1Coin} from "./generated/cosmos/base/v1beta1/coin.sol";
+import {GoogleProtobufAny as Any} from "./generated/GoogleProtobufAny.sol";
 import {
     IbcApplicationsInterchain_accountsV1InterchainAccountPacketData,
     PACKET_PROTO_GLOBAL_ENUMS
@@ -76,6 +79,58 @@ contract TestICA {
         return abi.decode(data, (uint64));
     }
 
+    function msgSend(
+        string memory connectionID,
+        string memory sender,
+        string memory receiver,
+        string memory denom,
+        string memory amt
+    ) public returns (bytes memory) {
+        CosmosBaseV1beta1Coin.Data[] memory coins = new CosmosBaseV1beta1Coin.Data[](1);
+        coins[0].denom = denom;
+        coins[0].amount = amt;
+        return CosmosBankV1beta1MsgSend.encode(
+            CosmosBankV1beta1MsgSend.Data({
+                from_address: sender,
+                to_address: receiver,
+                amount: coins
+            })
+        );
+    }
+
+    function base64Encode(
+        string memory connectionID,
+        string memory sender,
+        string memory receiver,
+        string memory denom,
+        string memory amt
+    ) public returns (string memory) {
+        bytes memory value = msgSend(connectionID, sender, receiver, denom, amt);
+        Any.Data[] memory a = new Any.Data[](0);
+        CosmosTxV1beta1TxBody.Data memory txBody = CosmosTxV1beta1TxBody.Data({
+            messages: a,
+            memo: "",
+            timeout_height: 0,
+            extension_options: a,
+            non_critical_extension_options: a
+        });
+        CosmosTxV1beta1TxBody.addMessages(txBody, Any.Data({
+            type_url: "/cosmos.bank.v1beta1.MsgSend",
+            value: value
+        }));
+        return Base64.encode(CosmosTxV1beta1TxBody.encode(txBody));
+    }
+
+    function genPacket(bytes memory data) public returns (bytes memory) {
+        return IbcApplicationsInterchain_accountsV1InterchainAccountPacketData.encode(
+            IbcApplicationsInterchain_accountsV1InterchainAccountPacketData.Data({
+                f_type: PACKET_PROTO_GLOBAL_ENUMS.Type.TYPE_EXECUTE_TX,
+                data: data,
+                memo: ""
+            })
+        );
+    }
+
     function nativeSubmitsMsgSend(
         string memory connectionID,
         string memory sender,
@@ -83,27 +138,13 @@ contract TestICA {
         string memory denom,
         string memory amt
     ) public returns (uint64) {
-        CosmosBaseV1beta1Coin.Data[] memory coins = new CosmosBaseV1beta1Coin.Data[](1);
-        coins[0].denom = denom;
-        coins[0].amount = amt;
-        bytes memory data = abi.encodeWithSignature(
-            "submitMsgs(string,string,uint256)",
-            connectionID,
-            msg.sender,
-            IbcApplicationsInterchain_accountsV1InterchainAccountPacketData.encode(
-                IbcApplicationsInterchain_accountsV1InterchainAccountPacketData.Data({
-                    f_type: PACKET_PROTO_GLOBAL_ENUMS.Type.TYPE_EXECUTE_TX,
-                    data: CosmosBankV1beta1MsgSend.encode(
-                        CosmosBankV1beta1MsgSend.Data({
-                            from_address: sender,
-                            to_address: receiver,
-                            amount: coins
-                        })
-                    ),
-                    memo: ""
-                })
-            ),
-            300000000000
+        string memory txBodyBase64 = base64Encode(connectionID, sender, receiver, denom, amt);
+        // string memory p = bytesToString(genPacket(bytes(txBodyBase64)));
+        // string memory txBodyBase64 = "Cp0BChwvY29zbW9zLmJhbmsudjFiZXRhMS5Nc2dTZW5kEn0KPmNybzEwcXI3NHFtd2RranZoejI0bDUydHplbWhjNTI4d21xdmV0aGpzM2x2OGhwOXZkYWgyYThxMm52eDZsEipjcm8xZGt3anRta3VleWUzZnF3enl2MmpyZG43ZnNwZDJqa21qbnM0M3kaDwoHYmFzZWNybxIEMTAwMA==";
+        bytes memory data = abi.encodePacked(
+            '{"type": "TYPE_EXECUTE_TX", "data": "',
+            txBodyBase64,
+            '", "memo": ""}'
         );
         return ica.submitMsgs(connectionID, bytesToString(data), 300000000000);
     }
