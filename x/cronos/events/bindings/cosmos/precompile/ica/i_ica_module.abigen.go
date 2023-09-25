@@ -30,7 +30,7 @@ var (
 
 // ICAModuleMetaData contains all meta data concerning the ICAModule contract.
 var ICAModuleMetaData = &bind.MetaData{
-	ABI: "[{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"internalType\":\"uint64\",\"name\":\"seq\",\"type\":\"uint64\"}],\"name\":\"SubmitMsgsResult\",\"type\":\"event\"},{\"inputs\":[{\"internalType\":\"string\",\"name\":\"connectionID\",\"type\":\"string\"},{\"internalType\":\"address\",\"name\":\"addr\",\"type\":\"address\"}],\"name\":\"queryAccount\",\"outputs\":[{\"internalType\":\"string\",\"name\":\"\",\"type\":\"string\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"string\",\"name\":\"connectionID\",\"type\":\"string\"},{\"internalType\":\"string\",\"name\":\"version\",\"type\":\"string\"}],\"name\":\"registerAccount\",\"outputs\":[{\"internalType\":\"bool\",\"name\":\"\",\"type\":\"bool\"}],\"stateMutability\":\"payable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"string\",\"name\":\"connectionID\",\"type\":\"string\"},{\"internalType\":\"string\",\"name\":\"data\",\"type\":\"string\"},{\"internalType\":\"uint256\",\"name\":\"timeout\",\"type\":\"uint256\"}],\"name\":\"submitMsgs\",\"outputs\":[{\"internalType\":\"uint64\",\"name\":\"\",\"type\":\"uint64\"}],\"stateMutability\":\"payable\",\"type\":\"function\"}]",
+	ABI: "[{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"internalType\":\"uint64\",\"name\":\"seq\",\"type\":\"uint64\"}],\"name\":\"SubmitMsgsResult\",\"type\":\"event\"},{\"inputs\":[{\"internalType\":\"string\",\"name\":\"connectionID\",\"type\":\"string\"},{\"internalType\":\"address\",\"name\":\"addr\",\"type\":\"address\"}],\"name\":\"queryAccount\",\"outputs\":[{\"internalType\":\"string\",\"name\":\"\",\"type\":\"string\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint64\",\"name\":\"seq\",\"type\":\"uint64\"}],\"name\":\"querySubmitMsgsResult\",\"outputs\":[{\"internalType\":\"bytes\",\"name\":\"\",\"type\":\"bytes\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"string\",\"name\":\"connectionID\",\"type\":\"string\"},{\"internalType\":\"string\",\"name\":\"version\",\"type\":\"string\"}],\"name\":\"registerAccount\",\"outputs\":[{\"internalType\":\"bool\",\"name\":\"\",\"type\":\"bool\"}],\"stateMutability\":\"payable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"string\",\"name\":\"connectionID\",\"type\":\"string\"},{\"internalType\":\"string\",\"name\":\"data\",\"type\":\"string\"},{\"internalType\":\"uint256\",\"name\":\"timeout\",\"type\":\"uint256\"}],\"name\":\"submitMsgs\",\"outputs\":[{\"internalType\":\"uint64\",\"name\":\"\",\"type\":\"uint64\"}],\"stateMutability\":\"payable\",\"type\":\"function\"}]",
 }
 
 // ICAModuleABI is the input ABI used to generate the binding from.
@@ -208,6 +208,37 @@ func (_ICAModule *ICAModuleSession) QueryAccount(connectionID string, addr commo
 // Solidity: function queryAccount(string connectionID, address addr) view returns(string)
 func (_ICAModule *ICAModuleCallerSession) QueryAccount(connectionID string, addr common.Address) (string, error) {
 	return _ICAModule.Contract.QueryAccount(&_ICAModule.CallOpts, connectionID, addr)
+}
+
+// QuerySubmitMsgsResult is a free data retrieval call binding the contract method 0x4df78b55.
+//
+// Solidity: function querySubmitMsgsResult(uint64 seq) view returns(bytes)
+func (_ICAModule *ICAModuleCaller) QuerySubmitMsgsResult(opts *bind.CallOpts, seq uint64) ([]byte, error) {
+	var out []interface{}
+	err := _ICAModule.contract.Call(opts, &out, "querySubmitMsgsResult", seq)
+
+	if err != nil {
+		return *new([]byte), err
+	}
+
+	out0 := *abi.ConvertType(out[0], new([]byte)).(*[]byte)
+
+	return out0, err
+
+}
+
+// QuerySubmitMsgsResult is a free data retrieval call binding the contract method 0x4df78b55.
+//
+// Solidity: function querySubmitMsgsResult(uint64 seq) view returns(bytes)
+func (_ICAModule *ICAModuleSession) QuerySubmitMsgsResult(seq uint64) ([]byte, error) {
+	return _ICAModule.Contract.QuerySubmitMsgsResult(&_ICAModule.CallOpts, seq)
+}
+
+// QuerySubmitMsgsResult is a free data retrieval call binding the contract method 0x4df78b55.
+//
+// Solidity: function querySubmitMsgsResult(uint64 seq) view returns(bytes)
+func (_ICAModule *ICAModuleCallerSession) QuerySubmitMsgsResult(seq uint64) ([]byte, error) {
+	return _ICAModule.Contract.QuerySubmitMsgsResult(&_ICAModule.CallOpts, seq)
 }
 
 // RegisterAccount is a paid mutator transaction binding the contract method 0xddc7b6a7.
