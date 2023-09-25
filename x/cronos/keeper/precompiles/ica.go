@@ -161,6 +161,17 @@ func (ic *IcaContract) Run(evm *vm.EVM, contract *vm.Contract, readonly bool) ([
 			return nil, execErr
 		}
 		return method.Outputs.Pack(seq)
+	case "querySubmitMsgsResult":
+		args, err := method.Inputs.Unpack(contract.Input[4:])
+		if err != nil {
+			return nil, errors.New("fail to unpack input arguments")
+		}
+		seq := args[0].(uint64)
+		response := ic.icaauthKeeper.GetPacketResult(stateDB.CacheContext(), seq)
+		if response == nil {
+			return nil, errors.New("pending status")
+		}
+		return method.Outputs.Pack(response)
 	default:
 		return nil, errors.New("unknown method")
 	}
