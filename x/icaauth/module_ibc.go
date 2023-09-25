@@ -112,6 +112,7 @@ func (am IBCModule) OnAcknowledgementPacket(
 	acknowledgement []byte,
 	relayer sdk.AccAddress,
 ) error {
+	am.keeper.SetPacketResult(ctx, packet.Sequence, acknowledgement)
 	return nil
 }
 
@@ -121,6 +122,8 @@ func (am IBCModule) OnTimeoutPacket(
 	packet channeltypes.Packet,
 	relayer sdk.AccAddress,
 ) error {
+	// set empty on timeout
+	am.keeper.SetPacketResult(ctx, packet.Sequence, []byte{})
 	return nil
 }
 

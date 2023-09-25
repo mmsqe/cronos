@@ -122,3 +122,13 @@ func (k *Keeper) ClaimCapability(ctx sdk.Context, cap *capabilitytypes.Capabilit
 func (k Keeper) Logger(ctx sdk.Context) log.Logger {
 	return ctx.Logger().With("module", fmt.Sprintf("x/%s", types.ModuleName))
 }
+
+func (k Keeper) GetPacketResult(ctx sdk.Context, sequence uint64) []byte {
+	store := ctx.KVStore(k.storeKey)
+	return store.Get(types.SequenceToPacketResultKey(sequence))
+}
+
+func (k Keeper) SetPacketResult(ctx sdk.Context, sequence uint64, result []byte) {
+	store := ctx.KVStore(k.storeKey)
+	store.Set(types.SequenceToPacketResultKey(sequence), result)
+}
