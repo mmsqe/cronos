@@ -20,13 +20,18 @@ from .utils import (
     get_method_map,
     get_topic_data,
     send_transaction,
+    wait_for_fn,
 )
 
 CONTRACT = "0x0000000000000000000000000000000000000066"
 contract_info = json.loads(CONTRACT_ABIS["IICAModule"].read_text())
 method_map = get_method_map(contract_info)
 connid = "connection-0"
-timeout = 300000000000
+# 5min in ns
+# timeout_in_ns = 300000000000
+# 5s in ns
+timeout_in_ns = 5000000000
+timeout_in_ms = timeout_in_ns // 1e9
 denom = "basecro"
 keys = KEYS["signer2"]
 validator = "validator"
@@ -88,7 +93,7 @@ def submit_msgs(ibc, func, data, ica_address, is_multi, seq):
     start = w3.eth.get_block_number()
     str = json.dumps(generated_packet)
     # submit transaction on host chain on behalf of interchain account
-    tx = func(connid, str, timeout).build_transaction(data)
+    tx = func(connid, str, timeout_in_ns).build_transaction(data)
     receipt = send_transaction(w3, tx, keys)
     assert receipt.status == 1
     logs = get_logs_since(w3, CONTRACT, start)
@@ -101,6 +106,23 @@ def submit_msgs(ibc, func, data, ica_address, is_multi, seq):
     return str
 
 
+# check for res of submit msgs
+def wait_for_submit_msg(contract, seq):
+    def check_submit():
+        try:
+            res = contract.functions.querySubmitMsgsResult(seq).call()
+            print("mm-res", res)
+            return True
+        except ValueError as e:
+            print("mm-e", e)
+            if "pending status" in str(e):
+                return None
+            else:
+                print("mm-err", e)
+                raise e
+    wait_for_fn(f"query seq {seq}", check_submit, timeout=timeout_in_ms)
+
+    
 def test_call(ibc):
     cli_host = ibc.chainmain.cosmos_cli()
     cli_controller = ibc.cronos.cosmos_cli()
@@ -119,13 +141,17 @@ def test_call(ibc):
         "channel-0",
     )
     balance = funds_ica(cli_host, ica_address)
-    submit_msgs(ibc, contract.functions.submitMsgs, data, ica_address, False, 1)
+    seq = 1
+    submit_msgs(ibc, contract.functions.submitMsgs, data, ica_address, False, seq)
     balance -= amt
     assert cli_host.balance(ica_address, denom=denom) == balance
-    submit_msgs(ibc, contract.functions.submitMsgs, data, ica_address, True, 2)
+    wait_for_submit_msg(contract, seq)
+    seq = 2
+    submit_msgs(ibc, contract.functions.submitMsgs, data, ica_address, True, seq)
     balance -= amt
     balance -= amt1
     assert cli_host.balance(ica_address, denom=denom) == balance
+    wait_for_submit_msg(contract, seq)
 
 
 def test_sc_call(ibc):
@@ -174,7 +200,7 @@ def test_sc_call(ibc):
 
     # readonly call should fail
     def submit_msgs_ro(func, str):
-        tx = func(connid, str, timeout).build_transaction(data)
+        tx = func(connid, str, timeout_in_ns).build_transaction(data)
         assert send_transaction(w3, tx, keys).status == 0
 
     seq = 1
@@ -191,6 +217,7 @@ def test_sc_call(ibc):
     assert tcontract.caller.getLastAckSeq() == seq
     balance -= amt
     assert cli_host.balance(ica_address, denom=denom) == balance
+    wait_for_submit_msg(contract, seq)
     seq = 2
     str = submit_msgs(
         ibc,
@@ -205,3 +232,4 @@ def test_sc_call(ibc):
     balance -= amt
     balance -= amt1
     assert cli_host.balance(ica_address, denom=denom) == balance
+    wait_for_submit_msg(contract, seq)
