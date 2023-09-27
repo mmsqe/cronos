@@ -8,8 +8,9 @@ contract TestICA {
     IICAModule ica = IICAModule(icaContract);
     address account;
     uint64 lastAckSeq;
-    event OnAcknowledgementPacketResult(uint64 seq, bytes acknowledgement);
-    event OnTimeoutPacketResult(uint64 seq);
+    bytes lastAck;
+    mapping (uint64 => bytes) public acknowledgement;
+    event OnPacketResult(uint64 seq, bytes ack);
 
     function encodeRegister(string memory connectionID, string memory version) internal view returns (bytes memory) {
         return abi.encodeWithSignature(
@@ -95,13 +96,23 @@ contract TestICA {
         return lastAckSeq;
     }
 
-    function onAcknowledgementPacketCallback(uint64 seq, address packetSenderAddress, bytes calldata acknowledgement) public {
-        require(packetSenderAddress == address(this), "different sender");
-        emit OnAcknowledgementPacketResult(seq, acknowledgement);
+    function getLastAck() public view returns (bytes memory) {
+        return lastAck;
     }
 
-    function onTimeoutPacketCallback(uint64 seq, address packetSenderAddress) public {
+    function setLastAckSeq(uint64 seq, bytes calldata ack) public returns (uint64) {
+        lastAckSeq = seq;
+        lastAck = ack;
+        acknowledgement[seq] = ack;
+        emit OnPacketResult(seq, ack);
+        return lastAckSeq;
+    }
+
+    function onPacketResult(uint64 seq, address packetSenderAddress, bytes calldata ack) external payable returns (bool) {
         require(packetSenderAddress == address(this), "different sender");
-        emit OnTimeoutPacketResult(seq);
+        acknowledgement[seq] = ack;
+        lastAck = ack;
+        emit OnPacketResult(seq, ack);
+        return true;
     }
 }
