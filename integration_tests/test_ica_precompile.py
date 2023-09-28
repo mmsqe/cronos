@@ -282,6 +282,30 @@ def test_sc_call(ibc):
         print("method_name, args", method_name, args)
         assert args == AttributeDict(expected_logs[i]), [i, method_name]
 
+
+def test_logs(cronos):
+    jsonfile = CONTRACTS["TestEvent"]
+    w3 = cronos.w3
+    tcontract = deploy_contract(w3, jsonfile)
+    t_abi_info = json.loads(jsonfile.read_text())["abi"]
+    t_method_map = get_method_map(t_abi_info)
+    addr = tcontract.address
+    print("mm-addr", addr)
+    name = "signer2"
+    signer = ADDRS[name]
+    keys = KEYS[name]
+    data = {"from": signer, "gas": 200000}
+    start = w3.eth.get_block_number()
+    expected_seq = 1
+    tx = tcontract.functions.onPacketResultCallback(
+        expected_seq,
+        True,
+    ).build_transaction(data)
+    res = send_transaction(w3, tx, keys)
+    assert res.status == 1
+    print("res", res)
+    logs = get_logs_since(w3, addr, start)
+    expected_logs = [{"seq": expected_seq, "status": Status.SUCCESS}]
     print("logs", logs)
     for i, log in enumerate(logs):
         method_name, args = get_topic_data(w3, t_method_map, t_abi_info, log)
