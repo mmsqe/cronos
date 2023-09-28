@@ -26,8 +26,8 @@ from .utils import (
 )
 
 CONTRACT = "0x0000000000000000000000000000000000000066"
-contract_info = json.loads(CONTRACT_ABIS["IICAModule"].read_text())
-method_map = get_method_map(contract_info)
+abi_info = json.loads(CONTRACT_ABIS["IICAModule"].read_text())
+method_map = get_method_map(abi_info)
 connid = "connection-0"
 no_timeout = 300000000000
 denom = "basecro"
@@ -115,7 +115,7 @@ def submit_msgs(
         expected = [{"seq": expected_seq}]
         assert len(logs) == len(expected)
         for i, log in enumerate(logs):
-            method_name, args = get_topic_data(w3, method_map, contract_info, log)
+            method_name, args = get_topic_data(w3, method_map, abi_info, log)
             assert args == AttributeDict(expected[i]), [i, method_name]
         wait_for_check_tx(cli_host, ica_address, num_txs)
     return str
@@ -127,7 +127,7 @@ def test_call(ibc):
     w3 = ibc.cronos.w3
     name = "signer2"
     addr = ADDRS[name]
-    contract = w3.eth.contract(address=CONTRACT, abi=contract_info)
+    contract = w3.eth.contract(address=CONTRACT, abi=abi_info)
     data = {"from": ADDRS[name], "gas": 200000}
     ica_address = register_acc(
         cli_controller,
@@ -163,9 +163,11 @@ def test_sc_call(ibc):
     cli_host = ibc.chainmain.cosmos_cli()
     cli_controller = ibc.cronos.cosmos_cli()
     w3 = ibc.cronos.w3
-    contract = w3.eth.contract(address=CONTRACT, abi=contract_info)
+    contract = w3.eth.contract(address=CONTRACT, abi=abi_info)
     jsonfile = CONTRACTS["TestICA"]
     tcontract = deploy_contract(w3, jsonfile)
+    t_abi_info = json.loads(jsonfile.read_text())["abi"]
+    t_method_map = get_method_map(t_abi_info)
     addr = tcontract.address
     name = "signer2"
     signer = ADDRS[name]
@@ -178,7 +180,8 @@ def test_sc_call(ibc):
         contract.functions.queryAccount,
         data,
         addr,
-        "channel-1",
+        "channel-0",
+        # "channel-1",
     )
     balance = funds_ica(cli_host, ica_address)
     assert tcontract.caller.getAccount() == signer
@@ -209,6 +212,8 @@ def test_sc_call(ibc):
         tx = func(connid, str, no_timeout).build_transaction(data)
         assert send_transaction(w3, tx, keys).status == 0
 
+    start = w3.eth.get_block_number()
+    expected_logs = []
     expected_seq = 1
     str = submit_msgs(
         ibc,
@@ -227,6 +232,7 @@ def test_sc_call(ibc):
     assert expected_seq == last_seq
     assert status == Status.SUCCESS
     assert cli_host.balance(ica_address, denom=denom) == balance
+    expected_logs.append({"seq": expected_seq, "status": status})
 
     expected_seq = 2
     str = submit_msgs(
@@ -246,6 +252,7 @@ def test_sc_call(ibc):
     status = tcontract.caller.statusMap(last_seq)
     assert expected_seq == last_seq
     assert status == Status.SUCCESS
+    expected_logs.append({"seq": expected_seq, "status": status})
 
     # balance and seq should not change on timeout
     timeout = 300000
@@ -264,3 +271,43 @@ def test_sc_call(ibc):
     status = tcontract.caller.statusMap(last_seq)
     assert expected_seq == last_seq
     assert status == Status.TIMEOUT
+    expected_logs.append({"seq": expected_seq, "status": status})
+
+    logs = get_logs_since(w3, addr, start)
+    # mod_address = "0x89A7EF2F08B1c018D5Cc88836249b84Dd5392905"
+    # logs = get_logs_since(w3, mod_address, start)
+    print("logs", logs)
+    for i, log in enumerate(logs):
+        method_name, args = get_topic_data(w3, t_method_map, t_abi_info, log)
+        print("method_name, args", method_name, args)
+        assert args == AttributeDict(expected_logs[i]), [i, method_name]
+
+
+def test_logs(cronos):
+    jsonfile = CONTRACTS["TestEvent"]
+    w3 = cronos.w3
+    tcontract = deploy_contract(w3, jsonfile)
+    t_abi_info = json.loads(jsonfile.read_text())["abi"]
+    t_method_map = get_method_map(t_abi_info)
+    addr = tcontract.address
+    print("mm-addr", addr)
+    name = "signer2"
+    signer = ADDRS[name]
+    keys = KEYS[name]
+    data = {"from": signer, "gas": 200000}
+    start = w3.eth.get_block_number()
+    expected_seq = 1
+    tx = tcontract.functions.onPacketResultCallback(
+        expected_seq,
+        True,
+    ).build_transaction(data)
+    res = send_transaction(w3, tx, keys)
+    assert res.status == 1
+    print("res", res)
+    logs = get_logs_since(w3, addr, start)
+    expected_logs = [{"seq": expected_seq, "status": Status.SUCCESS}]
+    print("logs", logs)
+    for i, log in enumerate(logs):
+        method_name, args = get_topic_data(w3, t_method_map, t_abi_info, log)
+        print("method_name, args", method_name, args)
+        assert args == AttributeDict(expected_logs[i]), [i, method_name]
