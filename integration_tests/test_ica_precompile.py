@@ -180,7 +180,8 @@ def test_sc_call(ibc):
         contract.functions.queryAccount,
         data,
         addr,
-        "channel-1",
+        "channel-0",
+        # "channel-1",
     )
     balance = funds_ica(cli_host, ica_address)
     assert tcontract.caller.getAccount() == signer
@@ -273,6 +274,14 @@ def test_sc_call(ibc):
     expected_logs.append({"seq": expected_seq, "status": status})
 
     logs = get_logs_since(w3, addr, start)
+    # mod_address = "0x89A7EF2F08B1c018D5Cc88836249b84Dd5392905"
+    # logs = get_logs_since(w3, mod_address, start)
+    print("logs", logs)
+    for i, log in enumerate(logs):
+        method_name, args = get_topic_data(w3, t_method_map, t_abi_info, log)
+        print("method_name, args", method_name, args)
+        assert args == AttributeDict(expected_logs[i]), [i, method_name]
+
     print("logs", logs)
     for i, log in enumerate(logs):
         method_name, args = get_topic_data(w3, t_method_map, t_abi_info, log)
