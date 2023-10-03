@@ -22,7 +22,7 @@ pkgs.mkShell {
     pkgs.nixpkgs-fmt
     pkgs.rocksdb
     pkgs.chain-maind
-    pkgs.hermes
+    # pkgs.hermes
     pkgs.rly
   ];
   shellHook = ''
