@@ -15,10 +15,10 @@ pkgs.mkShell {
     pkgs.poetry
     pkgs.nodejs
     pkgs.git
-    pkgs.dapp
-    (renameExe pkgs.solc-static-versions.solc_0_6_8 "solc-0.6.8" "solc06")
-    (renameExe pkgs.solc-static-versions.solc_0_8_21 "solc-0.8.21" "solc08")
-    pkgs.test-env
+    # pkgs.dapp
+    # (renameExe pkgs.solc-static-versions.solc_0_6_8 "solc-0.6.8" "solc06")
+    # (renameExe pkgs.solc-static-versions.solc_0_8_21 "solc-0.8.21" "solc08")
+    # pkgs.test-env
     pkgs.nixpkgs-fmt
     pkgs.rocksdb
     pkgs.chain-maind
