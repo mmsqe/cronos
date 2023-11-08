@@ -11,6 +11,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	icatypes "github.com/cosmos/ibc-go/v7/modules/apps/27-interchain-accounts/types"
+	channeltypes "github.com/cosmos/ibc-go/v7/modules/core/04-channel/types"
 	cronosevents "github.com/crypto-org-chain/cronos/v2/x/cronos/events"
 	"github.com/crypto-org-chain/cronos/v2/x/cronos/events/bindings/cosmos/precompile/ica"
 	"github.com/crypto-org-chain/cronos/v2/x/cronos/events/bindings/cosmos/precompile/icacallback"
@@ -27,6 +28,7 @@ const (
 	RegisterAccountMethodName = "registerAccount"
 	QueryAccountMethodName    = "queryAccount"
 	SubmitMsgsMethodName      = "submitMsgs"
+	QueryStatusMethodName     = "queryStatus"
 )
 
 var (
@@ -50,7 +52,7 @@ func init() {
 		switch methodName {
 		case RegisterAccountMethodName:
 			icaGasRequiredByMethod[methodID] = 300000
-		case QueryAccountMethodName:
+		case QueryAccountMethodName, QueryStatusMethodName:
 			icaGasRequiredByMethod[methodID] = 100000
 		case SubmitMsgsMethodName:
 			icaGasRequiredByMethod[methodID] = 300000
@@ -70,15 +72,17 @@ type IcaContract struct {
 	cdc           codec.Codec
 	icaauthKeeper types.Icaauthkeeper
 	cronosKeeper  types.CronosKeeper
+	ibcKeeper     types.IbcKeeper
 	kvGasConfig   storetypes.GasConfig
 }
 
-func NewIcaContract(icaauthKeeper types.Icaauthkeeper, cronosKeeper types.CronosKeeper, cdc codec.Codec, kvGasConfig storetypes.GasConfig) vm.PrecompiledContract {
+func NewIcaContract(icaauthKeeper types.Icaauthkeeper, cronosKeeper types.CronosKeeper, ibcKeeper types.IbcKeeper, cdc codec.Codec, kvGasConfig storetypes.GasConfig) vm.PrecompiledContract {
 	return &IcaContract{
 		BaseContract:  NewBaseContract(icaContractAddress),
 		cdc:           cdc,
 		icaauthKeeper: icaauthKeeper,
 		cronosKeeper:  cronosKeeper,
+		ibcKeeper:     ibcKeeper,
 		kvGasConfig:   kvGasConfig,
 	}
 }
@@ -203,6 +207,29 @@ func (ic *IcaContract) Run(evm *vm.EVM, contract *vm.Contract, readonly bool) ([
 			return nil, execErr
 		}
 		return method.Outputs.Pack(seq)
+	case QueryStatusMethodName:
+		args, err := method.Inputs.Unpack(contract.Input[4:])
+		if err != nil {
+			return nil, errors.New("fail to unpack input arguments")
+		}
+		portId := args[0].(string)
+		packetSrcChannel := args[1].(string)
+		seq := args[2].(uint64)
+		ack := false
+		response, err := ic.ibcKeeper.PacketAcknowledgement(
+			stateDB.CacheContext(),
+			&channeltypes.QueryPacketAcknowledgementRequest{
+				PortId:    portId,
+				ChannelId: packetSrcChannel,
+				Sequence:  seq,
+			})
+		if err != nil {
+			return nil, err
+		}
+		if response != nil {
+			fmt.Println("mm-response", response.GetAcknowledgement())
+		}
+		return method.Outputs.Pack(ack)
 	default:
 		return nil, errors.New("unknown method")
 	}

@@ -117,4 +117,32 @@ contract TestICA {
         emit OnPacketResult(seq, status);
         return true;
     }
+    
+    function encodeQueryStatus(string calldata portId, string calldata packetSrcChannel, uint64 seq) internal view returns (bytes memory) {
+        return abi.encodeWithSignature(
+            "queryStatus(string,string,uint64)",
+            portId, packetSrcChannel, seq
+        );
+    }
+
+    function callQueryStatus(string calldata portId, string calldata packetSrcChannel, uint64 seq) public returns (Status) {
+        bool ack = ica.queryStatus(portId, packetSrcChannel, seq);
+        Status status = Status.FAIL;
+        if (ack) {
+            status = Status.SUCCESS;
+        }
+        return status;
+    }
+
+    function delegateQueryStatus(string calldata portId, string calldata packetSrcChannel, uint64 seq) public returns (Status) {
+        (bool result, bytes memory data) = icaContract.delegatecall(encodeQueryStatus(portId, packetSrcChannel, seq));
+        require(result, "call failed");
+        return abi.decode(data, (Status));
+    }
+
+    function staticQueryStatus(string calldata portId, string calldata packetSrcChannel, uint64 seq) public returns (Status) {
+        (bool result, bytes memory data) = icaContract.staticcall(encodeQueryStatus(portId, packetSrcChannel, seq));
+        require(result, "call failed");
+        return abi.decode(data, (Status));
+    }
 }
