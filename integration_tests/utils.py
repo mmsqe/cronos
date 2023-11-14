@@ -34,10 +34,10 @@ load_dotenv(Path(__file__).parent.parent / "scripts/.env")
 Account.enable_unaudited_hdwallet_features()
 ACCOUNTS = {
     "validator": Account.from_mnemonic(os.getenv("VALIDATOR1_MNEMONIC")),
-    "validator2": Account.from_mnemonic(os.getenv("VALIDATOR2_MNEMONIC")),
+    # "validator2": Account.from_mnemonic(os.getenv("VALIDATOR2_MNEMONIC")),
     "community": Account.from_mnemonic(os.getenv("COMMUNITY_MNEMONIC")),
-    "signer1": Account.from_mnemonic(os.getenv("SIGNER1_MNEMONIC")),
-    "signer2": Account.from_mnemonic(os.getenv("SIGNER2_MNEMONIC")),
+    # "signer1": Account.from_mnemonic(os.getenv("SIGNER1_MNEMONIC")),
+    # "signer2": Account.from_mnemonic(os.getenv("SIGNER2_MNEMONIC")),
 }
 KEYS = {name: account.key for name, account in ACCOUNTS.items()}
 ADDRS = {name: account.address for name, account in ACCOUNTS.items()}
@@ -590,6 +590,21 @@ def send_txs(w3, cli, to, keys, params):
 
     return block_num_0, sended_hash_set
 
+def send_txs2(w3, cli, keys, tx):
+    # use different sender accounts to be able be send concurrently
+    raw_transactions = []
+    for key_from in keys:
+        signed = sign_transaction(w3, tx, key_from)
+        raw_transactions.append(signed.rawTransaction)
+
+    # wait block update
+    block_num_0 = wait_for_new_blocks(cli, 1, sleep=0.1)
+    print(f"block number start: {block_num_0}")
+
+    # send transactions
+    sended_hash_set = send_raw_transactions(w3, raw_transactions)
+
+    return block_num_0, sended_hash_set
 
 def multiple_send_to_cosmos(gcontract, tcontract, w3, recipient, amount, keys):
     # use different sender accounts to be able be send concurrently
