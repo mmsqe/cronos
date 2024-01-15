@@ -39,7 +39,7 @@ jobs:
           extra_nix_config: |
             access-tokens = github.com=${{ secrets.GITHUB_TOKEN }}
         if: steps.changed-files.outputs.only_changed == 'false'
-      - uses: cachix/cachix-action@v12
+      - uses: cachix/cachix-action@v13
         if: steps.changed-files.outputs.only_changed == 'false'
         with:
           name: cronos
@@ -96,7 +96,7 @@ jobs:
           extra_nix_config: |
             access-tokens = github.com=${{ secrets.GITHUB_TOKEN }}
         if: steps.changed-files.outputs.only_changed == 'false'
-      - uses: cachix/cachix-action@v12
+      - uses: cachix/cachix-action@v13
         if: steps.changed-files.outputs.only_changed == 'false'
         with:
           name: cronos
