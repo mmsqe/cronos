@@ -30,7 +30,7 @@ def ibc(request, tmp_path_factory):
         name,
         incentivized=False,
         connection_only=True,
-        relayer=cluster.Relayer.HERMES.value,
+        relayer=cluster.Relayer.RLY.value,
     )
 
 
