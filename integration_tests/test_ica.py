@@ -112,7 +112,7 @@ def test_ica(ibc, tmp_path):
     def submit_msgs(msg_num, t=no_timeout, gas="200000"):
         num_txs = len(cli_host.query_all_txs(ica_address)["txs"])
         # submit transaction on host chain on behalf of interchain account
-        timeout_duration = f"{t}ns" if t < no_timeout else f"{no_timeout}s"
+        timeout_duration = f"{t}s" if t < no_timeout else f"{no_timeout}s"
         rsp = cli_controller.icaauth_submit_tx(
             connid,
             generated_tx_txt(msg_num),
