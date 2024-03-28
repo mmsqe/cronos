@@ -9,7 +9,6 @@ module.exports = {
           optimizer: {
             enabled: true
           },
-          evmVersion: "shanghai"
         }
       },
       {
