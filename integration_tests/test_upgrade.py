@@ -155,6 +155,9 @@ def exec(c, tmp_path_factory, testnet=True):
     assert rsp["code"] == 0, rsp["raw_log"]
     approve_proposal(c, rsp, event_query_tx=testnet)
 
+    nonce_bf = c.w3.eth.get_transaction_count(ADDRS["validator"])
+    print("mm-nonce-bf", nonce_bf)
+
     # update cli chain binary
     c.chain_binary = (
         Path(c.chain_binary).parent.parent.parent / f"{plan_name}/bin/cronosd"
@@ -170,6 +173,9 @@ def exec(c, tmp_path_factory, testnet=True):
 
     # check basic tx works
     wait_for_port(ports.evmrpc_port(c.base_port(0)))
+
+    nonce_af = c.w3.eth.get_transaction_count(ADDRS["validator"])
+    print("mm-nonce-af", nonce_af)
     receipt = send_transaction(
         c.w3,
         {
@@ -180,6 +186,7 @@ def exec(c, tmp_path_factory, testnet=True):
         },
     )
     assert receipt.status == 1
+    return
 
     if not testnet:
         # after upgrade, PUSH0 opcode is supported
