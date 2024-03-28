@@ -192,9 +192,10 @@ def exec(c, tmp_path_factory, testnet=True):
     )
     assert receipt.status == 1
     
-    nonce = c.w3.eth.get_transaction_count(ADDRS["validator"])
-    print("mm-nonce-af", nonce)
-    tx = contract.functions.transfer(receiver, amount).build_transaction({"from": ADDRS["validator"]})
+    # nonce = c.w3.eth.get_transaction_count(ADDRS["validator"])
+    # print("mm-nonce-af", nonce)
+    tx = contract.functions.transfer(receiver, amount).build_transaction({"from": ADDRS["validator"], "nonce": nonce + 1})
+    print("mm-tx", tx)
     receipt = send_transaction(c.w3, tx, key=KEYS["validator"])
     assert receipt.status == 1
     assert contract.caller.balanceOf(receiver) == amount * 2
