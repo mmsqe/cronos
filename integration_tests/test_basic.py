@@ -34,6 +34,16 @@ def test_basic(cluster):
     assert w3.eth.chain_id == 777
 
 
+def test_random(cronos):
+    w3 = cronos.w3
+    contract = deploy_contract(
+        w3,
+        CONTRACTS["Random"],
+        key=KEYS["validator"],
+    )
+    print(contract.caller.randomTokenId())
+
+
 def test_send_transaction(cluster):
     "test eth_sendTransaction api"
     w3 = cluster.w3
