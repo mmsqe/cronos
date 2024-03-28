@@ -128,6 +128,29 @@ def test_send_transaction(cluster):
     assert receipt.gasUsed == 21000
 
 
+def test_sc(cronos):
+    w3 = cronos.w3
+    contract = deploy_contract(w3, CONTRACTS["TestERC20A"], key=KEYS["user1"])
+    amount = 100
+    receiver = ADDRS["community"]
+    nonce = w3.eth.get_transaction_count(ADDRS["user1"])
+    print("mm-nonce", nonce)
+    tx = contract.functions.transfer(receiver, amount).build_transaction({"from": ADDRS["user1"]})
+    receipt = send_transaction(w3, tx, key=KEYS["user1"])
+    assert receipt.status == 1
+    assert contract.caller.balanceOf(receiver) == amount
+    nonce = w3.eth.get_transaction_count(ADDRS["user1"])
+    print("mm-balance1", contract.caller.balanceOf(receiver), nonce)
+    nonce = w3.eth.get_transaction_count(ADDRS["user1"])
+    print("mm-nonce-af", nonce)
+    tx = contract.functions.transfer(receiver, amount).build_transaction({"from": ADDRS["user1"]})
+    receipt = send_transaction(w3, tx, key=KEYS["user1"])
+    assert receipt.status == 1
+    assert contract.caller.balanceOf(receiver) == amount * 2
+    nonce = w3.eth.get_transaction_count(ADDRS["user1"])
+    print("mm-balance2", contract.caller.balanceOf(receiver), nonce)
+
+
 def test_events(cluster, suspend_capture):
     w3 = cluster.w3
     erc20 = deploy_contract(

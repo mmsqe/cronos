@@ -123,23 +123,25 @@ def exec(c, tmp_path_factory, testnet=True):
     target_height = height + 15
     print("upgrade height", target_height)
 
+    w3 = c.w3
+
     if not testnet:
         # before upgrade, PUSH0 opcode is not supported
         with pytest.raises(ValueError) as e_info:
             deploy_contract(c.w3, CONTRACTS["Greeter"])
         assert "invalid opcode: PUSH0" in str(e_info.value)
 
-    contract = deploy_contract(c.w3, CONTRACTS["TestERC20A"], key=KEYS["validator"])
+    contract = deploy_contract(w3, CONTRACTS["TestERC20A"], key=KEYS["user1"])
     amount = 100
     receiver = ADDRS["community"]
-    nonce = c.w3.eth.get_transaction_count(ADDRS["validator"])
+    nonce = w3.eth.get_transaction_count(ADDRS["user1"])
     print("mm-nonce", nonce)
-    tx = contract.functions.transfer(receiver, amount).build_transaction({"from": ADDRS["validator"]})
-    receipt = send_transaction(c.w3, tx, key=KEYS["validator"])
+    tx = contract.functions.transfer(receiver, amount).build_transaction({"from": ADDRS["user1"]})
+    receipt = send_transaction(w3, tx, key=KEYS["user1"])
     assert receipt.status == 1
     assert contract.caller.balanceOf(receiver) == amount
-    nonce = c.w3.eth.get_transaction_count(ADDRS["validator"])
-    print("mm-balance1", contract.caller.balanceOf(receiver), nonce)
+    nonce = w3.eth.get_transaction_count(ADDRS["user1"])
+    print("mm-balance1", contract.caller.balanceOf(receiver), "nonce", nonce)
     
     old_height = c.w3.eth.block_number
     old_balance = c.w3.eth.get_balance(ADDRS["validator"], block_identifier=old_height)
@@ -170,6 +172,7 @@ def exec(c, tmp_path_factory, testnet=True):
         Path(c.chain_binary).parent.parent.parent / f"{plan_name}/bin/cronosd"
     )
     cli = c.cosmos_cli()
+    w3 = c.w3
 
     # block should pass the target height
     wait_for_block(cli, target_height + 2, timeout=480)
@@ -192,15 +195,14 @@ def exec(c, tmp_path_factory, testnet=True):
     )
     assert receipt.status == 1
     
-    # nonce = c.w3.eth.get_transaction_count(ADDRS["validator"])
-    # print("mm-nonce-af", nonce)
-    tx = contract.functions.transfer(receiver, amount).build_transaction({"from": ADDRS["validator"], "nonce": nonce + 1})
-    print("mm-tx", tx)
-    receipt = send_transaction(c.w3, tx, key=KEYS["validator"])
+    nonce_af = c.w3.eth.get_transaction_count(ADDRS["user1"])
+    print("mm-nonce-af", nonce_af)
+    tx = contract.functions.transfer(receiver, amount).build_transaction({"from": ADDRS["user1"]})
+    receipt = send_transaction(w3, tx, key=KEYS["user1"])
     assert receipt.status == 1
     assert contract.caller.balanceOf(receiver) == amount * 2
-    nonce = c.w3.eth.get_transaction_count(ADDRS["validator"])
-    print("mm-balance2", contract.caller.balanceOf(receiver), nonce)
+    nonce = w3.eth.get_transaction_count(ADDRS["user1"])
+    print("mm-balance2", contract.caller.balanceOf(receiver), "nonce", nonce)
 
     if not testnet:
         # after upgrade, PUSH0 opcode is supported
