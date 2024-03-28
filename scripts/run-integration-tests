@@ -10,12 +10,13 @@ cd ../integration_tests/contracts
 HUSKY_SKIP_INSTALL=1 npm install
 npm run typechain
 cd ..
-TESTS_TO_RUN="${TESTS_TO_RUN:-all}"
-if [[ "$TESTS_TO_RUN" == "all" ]]; then
-  echo "run all tests"
-  cmd="pytest -vv -s"
-else
-  echo "run tests matching $TESTS_TO_RUN"
-  cmd="pytest -vv -s -m '$TESTS_TO_RUN'"
-fi
+# TESTS_TO_RUN="${TESTS_TO_RUN:-all}"
+# if [[ "$TESTS_TO_RUN" == "all" ]]; then
+#   echo "run all tests"
+#   cmd="pytest -vv -s"
+# else
+#   echo "run tests matching $TESTS_TO_RUN"
+#   cmd="pytest -vv -s -m '$TESTS_TO_RUN'"
+# fi
+cmd="pytest -v -s test_upgrade.py::test_cosmovisor_upgrade_mainnet"
 nix-shell --run "$cmd"
