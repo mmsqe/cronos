@@ -38,6 +38,7 @@ ACCOUNTS = {
     "community": Account.from_mnemonic(os.getenv("COMMUNITY_MNEMONIC")),
     "signer1": Account.from_mnemonic(os.getenv("SIGNER1_MNEMONIC")),
     "signer2": Account.from_mnemonic(os.getenv("SIGNER2_MNEMONIC")),
+    "user1": Account.from_mnemonic(os.getenv("USER1_MNEMONIC")),
 }
 KEYS = {name: account.key for name, account in ACCOUNTS.items()}
 ADDRS = {name: account.address for name, account in ACCOUNTS.items()}

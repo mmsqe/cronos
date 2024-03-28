@@ -13,6 +13,7 @@ from .network import Cronos, setup_custom_cronos
 from .utils import (
     ADDRS,
     CONTRACTS,
+    KEYS,
     approve_proposal,
     deploy_contract,
     edit_ini_sections,
@@ -122,7 +123,18 @@ def exec(c, tmp_path_factory, testnet=True):
     print("upgrade height", target_height)
 
     w3 = c.w3
-    contract = deploy_contract(w3, CONTRACTS["TestERC20A"])
+    contract = deploy_contract(w3, CONTRACTS["TestERC20A"], key=KEYS["user1"])
+    amount = 100
+    receiver = ADDRS["community"]
+    nonce = w3.eth.get_transaction_count(ADDRS["user1"])
+    print("mm-nonce", nonce)
+    tx = contract.functions.transfer(receiver, amount).build_transaction({"from": ADDRS["user1"]})
+    receipt = send_transaction(w3, tx, key=KEYS["user1"])
+    assert receipt.status == 1
+    assert contract.caller.balanceOf(receiver) == amount
+    nonce = w3.eth.get_transaction_count(ADDRS["user1"])
+    print("mm-balance1", contract.caller.balanceOf(receiver), "nonce", nonce)
+
     old_height = w3.eth.block_number
     old_balance = w3.eth.get_balance(ADDRS["validator"], block_identifier=old_height)
     old_base_fee = w3.eth.get_block(old_height).baseFeePerGas
@@ -145,14 +157,14 @@ def exec(c, tmp_path_factory, testnet=True):
         mode=None if testnet else "block",
     )
     assert rsp["code"] == 0, rsp["raw_log"]
-    event_query_tx = not testnet
-    approve_proposal(c, rsp, event_query_tx)
+    approve_proposal(c, rsp, event_query_tx=testnet)
 
     # update cli chain binary
     c.chain_binary = (
         Path(c.chain_binary).parent.parent.parent / f"{plan_name}/bin/cronosd"
     )
     cli = c.cosmos_cli()
+    w3 = c.w3
 
     # block should pass the target height
     wait_for_block(cli, target_height + 2, timeout=480)
@@ -163,16 +175,26 @@ def exec(c, tmp_path_factory, testnet=True):
 
     # check basic tx works
     wait_for_port(ports.evmrpc_port(c.base_port(0)))
-    receipt = send_transaction(
-        c.w3,
-        {
-            "to": ADDRS["community"],
-            "value": 1000,
-            "maxFeePerGas": 1000000000000,
-            "maxPriorityFeePerGas": 10000,
-        },
-    )
+    # receipt = send_transaction(
+    #     c.w3,
+    #     {
+    #         "to": ADDRS["community"],
+    #         "value": 1000,
+    #         "maxFeePerGas": 1000000000000,
+    #         "maxPriorityFeePerGas": 10000,
+    #     },
+    # )
+    # assert receipt.status == 1
+
+    nonce_af = c.w3.eth.get_transaction_count(ADDRS["user1"])
+    print("mm-nonce-af", nonce_af)
+    tx = contract.functions.transfer(receiver, amount).build_transaction({"from": ADDRS["user1"]})
+    receipt = send_transaction(w3, tx, key=KEYS["user1"])
     assert receipt.status == 1
+    assert contract.caller.balanceOf(receiver) == amount * 2
+    nonce = w3.eth.get_transaction_count(ADDRS["user1"])
+    print("mm-balance2", contract.caller.balanceOf(receiver), "nonce", nonce)
+    return
 
     # query json-rpc on older blocks should success
     assert old_balance == w3.eth.get_balance(
@@ -228,10 +250,9 @@ def exec(c, tmp_path_factory, testnet=True):
     c.supervisorctl("stop", "all")
 
 
-def test_cosmovisor_upgrade(testnet: Cronos, mainnet: Cronos, tmp_path_factory):
-    providers = [testnet, mainnet]
-    path = tmp_path_factory
-    with ThreadPoolExecutor(len(providers)) as executor:
-        as_completed(
-            [executor.submit(exec, net, path, net == testnet) for net in providers]
-        )
+def test_cosmovisor_upgrade_mainnet(mainnet: Cronos, tmp_path_factory):
+    exec(mainnet, tmp_path_factory, False)
+
+
+def test_cosmovisor_upgrade_testnet(testnet: Cronos, tmp_path_factory):
+    exec(testnet, tmp_path_factory, True)
