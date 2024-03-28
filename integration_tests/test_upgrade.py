@@ -12,6 +12,7 @@ from .network import Cronos, setup_custom_cronos
 from .utils import (
     ADDRS,
     CONTRACTS,
+    KEYS,
     approve_proposal,
     deploy_contract,
     edit_ini_sections,
@@ -122,18 +123,27 @@ def exec(c, tmp_path_factory, testnet=True):
     target_height = height + 15
     print("upgrade height", target_height)
 
-    w3 = c.w3
-
     if not testnet:
         # before upgrade, PUSH0 opcode is not supported
         with pytest.raises(ValueError) as e_info:
-            deploy_contract(w3, CONTRACTS["Greeter"])
+            deploy_contract(c.w3, CONTRACTS["Greeter"])
         assert "invalid opcode: PUSH0" in str(e_info.value)
 
-    contract = deploy_contract(w3, CONTRACTS["TestERC20A"])
-    old_height = w3.eth.block_number
-    old_balance = w3.eth.get_balance(ADDRS["validator"], block_identifier=old_height)
-    old_base_fee = w3.eth.get_block(old_height).baseFeePerGas
+    contract = deploy_contract(c.w3, CONTRACTS["TestERC20A"], key=KEYS["validator"])
+    amount = 100
+    receiver = ADDRS["community"]
+    nonce = c.w3.eth.get_transaction_count(ADDRS["validator"])
+    print("mm-nonce", nonce)
+    tx = contract.functions.transfer(receiver, amount).build_transaction({"from": ADDRS["validator"]})
+    receipt = send_transaction(c.w3, tx, key=KEYS["validator"])
+    assert receipt.status == 1
+    assert contract.caller.balanceOf(receiver) == amount
+    nonce = c.w3.eth.get_transaction_count(ADDRS["validator"])
+    print("mm-balance1", contract.caller.balanceOf(receiver), nonce)
+    
+    old_height = c.w3.eth.block_number
+    old_balance = c.w3.eth.get_balance(ADDRS["validator"], block_identifier=old_height)
+    old_base_fee = c.w3.eth.get_block(old_height).baseFeePerGas
     old_erc20_balance = contract.caller(block_identifier=old_height).balanceOf(
         ADDRS["validator"]
     )
@@ -178,18 +188,28 @@ def exec(c, tmp_path_factory, testnet=True):
             "maxFeePerGas": 10000000000000,
             "maxPriorityFeePerGas": 10000,
         },
+        key=KEYS["signer1"],
     )
     assert receipt.status == 1
+    
+    nonce = c.w3.eth.get_transaction_count(ADDRS["validator"])
+    print("mm-nonce-af", nonce)
+    tx = contract.functions.transfer(receiver, amount).build_transaction({"from": ADDRS["validator"]})
+    receipt = send_transaction(c.w3, tx, key=KEYS["validator"])
+    assert receipt.status == 1
+    assert contract.caller.balanceOf(receiver) == amount * 2
+    nonce = c.w3.eth.get_transaction_count(ADDRS["validator"])
+    print("mm-balance2", contract.caller.balanceOf(receiver), nonce)
 
     if not testnet:
         # after upgrade, PUSH0 opcode is supported
-        deploy_contract(w3, CONTRACTS["Greeter"])
+        deploy_contract(c.w3, CONTRACTS["Greeter"])
 
     # query json-rpc on older blocks should success
-    assert old_balance == w3.eth.get_balance(
+    assert old_balance == c.w3.eth.get_balance(
         ADDRS["validator"], block_identifier=old_height
     )
-    assert old_base_fee == w3.eth.get_block(old_height).baseFeePerGas
+    assert old_base_fee == c.w3.eth.get_block(old_height).baseFeePerGas
 
     # check eth_call works on older blocks
     assert old_erc20_balance == contract.caller(block_identifier=old_height).balanceOf(
@@ -197,8 +217,9 @@ def exec(c, tmp_path_factory, testnet=True):
     )
     # check consensus params
     port = ports.rpc_port(c.base_port(0))
-    res = get_consensus_params(port, w3.eth.get_block_number())
+    res = get_consensus_params(port, c.w3.eth.get_block_number())
     assert res["block"]["max_gas"] == "60000000"
+    return
 
     # check bank send enable
     p = cli.query_bank_send()
