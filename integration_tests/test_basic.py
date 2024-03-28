@@ -79,6 +79,16 @@ def approve_proposal_legacy(node, rsp):
     return amount
 
 
+def test_random(cronos):
+    w3 = cronos.w3
+    contract = deploy_contract(
+        w3,
+        CONTRACTS["Random"],
+        key=KEYS["validator"],
+    )
+    print(contract.caller.randomTokenId())
+
+
 def test_ica_enabled(cronos):
     cli = cronos.cosmos_cli()
     p = cli.query_icacontroller_params()
