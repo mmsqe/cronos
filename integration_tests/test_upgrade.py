@@ -17,7 +17,6 @@ from .utils import (
     deploy_contract,
     edit_ini_sections,
     eth_to_bech32,
-    get_contract,
     get_consensus_params,
     get_send_enable,
     send_transaction,
@@ -25,7 +24,6 @@ from .utils import (
     wait_for_new_blocks,
     wait_for_port,
 )
-import web3
 
 pytestmark = pytest.mark.upgrade
 
@@ -94,26 +92,12 @@ def setup_cronos_test(tmp_path_factory, testnet=True):
     ) as cronos:
         yield cronos
 
-
 def assert_greeter(w3, greeter, old, new):
     assert greeter.caller.greet() == old
     tx = greeter.functions.setGreeting(new).build_transaction()
     receipt = send_transaction(w3, tx)
     assert receipt.status == 1
     assert greeter.caller.greet() == new
-
-
-def test_sc():
-    port = "26201"
-    url = f"http://localhost:{port}"
-    w3 = web3.Web3(web3.providers.HTTPProvider(url))
-    address = "0x68542BD12B41F5D51D6282Ec7D91D7d0D78E4503"
-    greeter = get_contract(w3, address, CONTRACTS["Greeter"])
-    assert_greeter(w3, greeter, "world3", "world4")
-    address = "0x6e37202aD87Cfea0Dc392a0cEA22595861aba6DE"
-    random_contract = get_contract(w3, address, CONTRACTS["Random"])
-    res = random_contract.caller.randomTokenId()
-    assert res > 0, res
 
 
 def exec(c, tmp_path_factory, tmp_path, testnet=True):
