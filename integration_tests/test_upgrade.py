@@ -133,14 +133,13 @@ def exec(c, tmp_path_factory, tmp_path, testnet=True):
 
     w3 = c.w3
     # before Titan
-    greeter = deploy_contract(w3, CONTRACTS["Greeter"])
-    # mm-greeter 0x68542BD12B41F5D51D6282Ec7D91D7d0D78E4503
-    print("mm-greeter", greeter.address)
-    assert_greeter(w3, greeter, "Hello", "world1")
-    random_contract = deploy_contract(w3, CONTRACTS["Random"])
-    # mm-random_contract 0x6e37202aD87Cfea0Dc392a0cEA22595861aba6DE
-    print("mm-random_contract", random_contract.address)
-    assert random_contract.caller.randomTokenId() > 0
+    invalid_msg = "invalid opcode: PUSH0"
+    with pytest.raises(ValueError) as e_info:
+        deploy_contract(w3, CONTRACTS["Greeter"])
+    assert invalid_msg in str(e_info.value)
+    with pytest.raises(ValueError) as e_info:
+        deploy_contract(w3, CONTRACTS["Random"])
+    assert invalid_msg in str(e_info.value)
 
     contract = deploy_contract(w3, CONTRACTS["TestERC20A"])
     old_height = w3.eth.block_number
@@ -209,7 +208,9 @@ def exec(c, tmp_path_factory, tmp_path, testnet=True):
     assert res["block"]["max_gas"] == "60000000"
 
     # after Titan
-    assert_greeter(w3, greeter, "world1", "world2")
+    greeter = deploy_contract(w3, CONTRACTS["Greeter"])
+    random_contract = deploy_contract(w3, CONTRACTS["Random"])
+    assert_greeter(w3, greeter, "Hello", "world1")
     with pytest.raises(ValueError) as e_info:
         random_contract.caller.randomTokenId()
     assert "invalid memory address or nil pointer dereference" in str(e_info.value)
@@ -244,9 +245,12 @@ def exec(c, tmp_path_factory, tmp_path, testnet=True):
     assert not p["chain_config"]["shanghai_time"]
 
     # after disable
-    assert_greeter(w3, greeter, "world2", "world3")
-    res = random_contract.caller.randomTokenId()
-    assert res > 0, res
+    with pytest.raises(ValueError) as e_info:
+        greeter.caller.greet()
+    assert invalid_msg in str(e_info.value)
+    with pytest.raises(ValueError) as e_info:
+        random_contract.caller.randomTokenId()
+    assert invalid_msg in str(e_info.value)
 
     return
 

@@ -1,4 +1,4 @@
-pragma solidity 0.8.18;
+pragma solidity 0.8.20;
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 
 // This contract is for testing a case on the gravity bridge when attacker try to send an amount
