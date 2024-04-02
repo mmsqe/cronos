@@ -895,8 +895,8 @@ class CosmosCLI:
             )
         )["denom_trace"]
 
-    def export(self, **kwargs):
-        return self.raw("export", home=self.data_dir, **kwargs)
+    def export(self):
+        return self.raw("export", home=self.data_dir)
 
     def unsaferesetall(self):
         return self.raw("tendermint", "unsafe-reset-all")

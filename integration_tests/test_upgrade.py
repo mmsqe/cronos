@@ -16,6 +16,7 @@ from .utils import (
     deploy_contract,
     edit_ini_sections,
     get_consensus_params,
+    get_send_enable,
     send_transaction,
     wait_for_block,
     wait_for_new_blocks,
@@ -26,8 +27,13 @@ pytestmark = pytest.mark.upgrade
 
 
 @pytest.fixture(scope="module")
-def custom_cronos(tmp_path_factory):
+def testnet(tmp_path_factory):
     yield from setup_cronos_test(tmp_path_factory)
+
+
+@pytest.fixture(scope="module")
+def mainnet(tmp_path_factory):
+    yield from setup_cronos_test(tmp_path_factory, False)
 
 
 def init_cosmovisor(home):
@@ -61,11 +67,11 @@ def post_init(path, base_port, config):
     )
 
 
-def setup_cronos_test(tmp_path_factory):
+def setup_cronos_test(tmp_path_factory, testnet=True):
     path = tmp_path_factory.mktemp("upgrade")
-    port = 26200
-    nix_name = "upgrade-test-package"
-    cfg_name = "cosmovisor"
+    port = 26100 if testnet else 26200
+    nix_name = "upgrade-testnet-test-package" if testnet else "upgrade-test-package"
+    cfg_name = "cosmovisor_testnet" if testnet else "cosmovisor"
     cmd = [
         "nix-build",
         Path(__file__).parent / f"configs/{nix_name}.nix",
@@ -85,7 +91,7 @@ def setup_cronos_test(tmp_path_factory):
         yield cronos
 
 
-def exec(c, tmp_path_factory):
+def exec(c, tmp_path_factory, testnet=True):
     """
     - propose an upgrade and pass it
     - wait for it to happen
@@ -97,14 +103,16 @@ def exec(c, tmp_path_factory):
         {"denom": "basetcro", "enabled": False},
         {"denom": "stake", "enabled": True},
     ]
-    p = cli.query_bank_send()
+    p = cli.query_bank_send() if testnet else get_send_enable(port)
     assert sorted(p, key=lambda x: x["denom"]) == send_enable
 
     # export genesis from old version
     c.supervisorctl("stop", "all")
     migrate = tmp_path_factory.mktemp("migrate")
     file_path0 = Path(migrate / "old.json")
-    cli.export(output_document=str(file_path0))
+    with open(file_path0, "w") as fp:
+        json.dump(json.loads(cli.export()), fp)
+        fp.flush()
 
     c.supervisorctl("start", "cronos_777-1-node0", "cronos_777-1-node1")
     wait_for_port(ports.evmrpc_port(c.base_port(0)))
@@ -115,13 +123,13 @@ def exec(c, tmp_path_factory):
     print("upgrade height", target_height)
 
     w3 = c.w3
-    random_contract = deploy_contract(
-        c.w3,
-        CONTRACTS["Random"],
-    )
-    with pytest.raises(ValueError) as e_info:
-        random_contract.caller.randomTokenId()
-    assert "invalid memory address or nil pointer dereference" in str(e_info.value)
+
+    if not testnet:
+        # before upgrade, PUSH0 opcode is not supported
+        with pytest.raises(ValueError) as e_info:
+            deploy_contract(w3, CONTRACTS["Greeter"])
+        assert "invalid opcode: PUSH0" in str(e_info.value)
+
     contract = deploy_contract(w3, CONTRACTS["TestERC20A"])
     old_height = w3.eth.block_number
     old_balance = w3.eth.get_balance(ADDRS["validator"], block_identifier=old_height)
@@ -131,7 +139,7 @@ def exec(c, tmp_path_factory):
     )
     print("old values", old_height, old_balance, old_base_fee)
 
-    plan_name = "v1.2"
+    plan_name = "v1.1.0-testnet-1" if testnet else "v1.1.0"
     rsp = cli.gov_propose_legacy(
         "community",
         "software-upgrade",
@@ -142,10 +150,10 @@ def exec(c, tmp_path_factory):
             "upgrade-height": target_height,
             "deposit": "10000basetcro",
         },
-        mode=None,
+        mode=None if testnet else "block",
     )
     assert rsp["code"] == 0, rsp["raw_log"]
-    approve_proposal(c, rsp, event_query_tx=True)
+    approve_proposal(c, rsp, event_query_tx=testnet)
 
     # update cli chain binary
     c.chain_binary = (
@@ -173,11 +181,9 @@ def exec(c, tmp_path_factory):
     )
     assert receipt.status == 1
 
-    # deploy contract should still work
-    deploy_contract(w3, CONTRACTS["Greeter"])
-    # random should work
-    res = random_contract.caller.randomTokenId()
-    assert res > 0, res
+    if not testnet:
+        # after upgrade, PUSH0 opcode is supported
+        deploy_contract(w3, CONTRACTS["Greeter"])
 
     # query json-rpc on older blocks should success
     assert old_balance == w3.eth.get_balance(
@@ -202,6 +208,21 @@ def exec(c, tmp_path_factory):
     assert rsp["params"]["min_timeout_duration"] == "3600s", rsp
     max_callback_gas = cli.query_params()["max_callback_gas"]
     assert max_callback_gas == "50000", max_callback_gas
+    if not testnet:
+        # migrate to sdk v0.47
+        c.supervisorctl("stop", "all")
+        sdk_version = "v0.47"
+        file_path1 = Path(migrate / f"{sdk_version}.json")
+        with open(file_path1, "w") as fp:
+            json.dump(cli.migrate_sdk_genesis(sdk_version, str(file_path0)), fp)
+            fp.flush()
+        # migrate to cronos v1.0.x
+        cronos_version = "v1.0"
+        file_path0 = Path(migrate / f"{cronos_version}.json")
+        with open(file_path0, "w") as fp:
+            json.dump(cli.migrate_cronos_genesis(cronos_version, str(file_path1)), fp)
+            fp.flush()
+        print(cli.validate_genesis(str(file_path0)))
 
     # update the genesis time = current time + 5 secs
     newtime = datetime.utcnow() + timedelta(seconds=5)
@@ -218,5 +239,9 @@ def exec(c, tmp_path_factory):
     c.supervisorctl("stop", "all")
 
 
-def test_cosmovisor_upgrade(custom_cronos: Cronos, tmp_path_factory):
-    exec(custom_cronos, tmp_path_factory)
+def test_cosmovisor_upgrade_mainnet(mainnet: Cronos, tmp_path_factory):
+    exec(mainnet, tmp_path_factory, False)
+
+
+def test_cosmovisor_upgrade_testnet(testnet: Cronos, tmp_path_factory):
+    exec(testnet, tmp_path_factory, True)
