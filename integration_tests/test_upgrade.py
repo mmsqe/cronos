@@ -85,6 +85,14 @@ def setup_cronos_test(tmp_path_factory):
         yield cronos
 
 
+def assert_greeter(w3, greeter, old, new):
+    assert greeter.caller.greet() == old
+    tx = greeter.functions.setGreeting(new).build_transaction()
+    receipt = send_transaction(w3, tx)
+    assert receipt.status == 1
+    assert greeter.caller.greet() == new
+
+
 def exec(c, tmp_path_factory):
     """
     - propose an upgrade and pass it
@@ -115,6 +123,7 @@ def exec(c, tmp_path_factory):
     print("upgrade height", target_height)
 
     w3 = c.w3
+    # after Titan
     random_contract = deploy_contract(
         c.w3,
         CONTRACTS["Random"],
@@ -122,6 +131,9 @@ def exec(c, tmp_path_factory):
     with pytest.raises(ValueError) as e_info:
         random_contract.caller.randomTokenId()
     assert "invalid memory address or nil pointer dereference" in str(e_info.value)
+    greeter = deploy_contract(w3, CONTRACTS["Greeter"])
+    assert_greeter(w3, greeter, "Hello", "world1")
+
     contract = deploy_contract(w3, CONTRACTS["TestERC20A"])
     old_height = w3.eth.block_number
     old_balance = w3.eth.get_balance(ADDRS["validator"], block_identifier=old_height)
@@ -173,11 +185,11 @@ def exec(c, tmp_path_factory):
     )
     assert receipt.status == 1
 
-    # deploy contract should still work
-    deploy_contract(w3, CONTRACTS["Greeter"])
-    # random should work
+    # after fix
+    assert_greeter(w3, greeter, "world1", "world2")
     res = random_contract.caller.randomTokenId()
     assert res > 0, res
+    return
 
     # query json-rpc on older blocks should success
     assert old_balance == w3.eth.get_balance(

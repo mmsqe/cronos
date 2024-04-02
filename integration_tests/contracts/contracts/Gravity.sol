@@ -1,4 +1,4 @@
-pragma solidity 0.8.21;
+pragma solidity 0.8.18;
 
 import "@openzeppelin/contracts/access/AccessControl.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
