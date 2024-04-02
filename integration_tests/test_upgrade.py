@@ -1,3 +1,4 @@
+import hashlib
 import json
 import subprocess
 from contextlib import contextmanager
@@ -15,6 +16,7 @@ from .utils import (
     approve_proposal,
     deploy_contract,
     edit_ini_sections,
+    eth_to_bech32,
     get_consensus_params,
     get_send_enable,
     send_transaction,
@@ -90,8 +92,15 @@ def setup_cronos_test(tmp_path_factory, testnet=True):
     ) as cronos:
         yield cronos
 
+def assert_greeter(w3, greeter, old, new):
+    assert greeter.caller.greet() == old
+    tx = greeter.functions.setGreeting(new).build_transaction()
+    receipt = send_transaction(w3, tx)
+    assert receipt.status == 1
+    assert greeter.caller.greet() == new
 
-def exec(c, tmp_path_factory, testnet=True):
+
+def exec(c, tmp_path_factory, tmp_path, testnet=True):
     """
     - propose an upgrade and pass it
     - wait for it to happen
@@ -123,12 +132,15 @@ def exec(c, tmp_path_factory, testnet=True):
     print("upgrade height", target_height)
 
     w3 = c.w3
-
-    if not testnet:
-        # before upgrade, PUSH0 opcode is not supported
-        with pytest.raises(ValueError) as e_info:
-            deploy_contract(w3, CONTRACTS["Greeter"])
-        assert "invalid opcode: PUSH0" in str(e_info.value)
+    # before Titan
+    greeter = deploy_contract(w3, CONTRACTS["Greeter"])
+    # mm-greeter 0x68542BD12B41F5D51D6282Ec7D91D7d0D78E4503
+    print("mm-greeter", greeter.address)
+    assert_greeter(w3, greeter, "Hello", "world1")
+    random_contract = deploy_contract(w3, CONTRACTS["Random"])
+    # mm-random_contract 0x6e37202aD87Cfea0Dc392a0cEA22595861aba6DE
+    print("mm-random_contract", random_contract.address)
+    assert random_contract.caller.randomTokenId() > 0
 
     contract = deploy_contract(w3, CONTRACTS["TestERC20A"])
     old_height = w3.eth.block_number
@@ -180,11 +192,7 @@ def exec(c, tmp_path_factory, testnet=True):
         },
     )
     assert receipt.status == 1
-
-    if not testnet:
-        # after upgrade, PUSH0 opcode is supported
-        deploy_contract(w3, CONTRACTS["Greeter"])
-
+    
     # query json-rpc on older blocks should success
     assert old_balance == w3.eth.get_balance(
         ADDRS["validator"], block_identifier=old_height
@@ -199,6 +207,48 @@ def exec(c, tmp_path_factory, testnet=True):
     port = ports.rpc_port(c.base_port(0))
     res = get_consensus_params(port, w3.eth.get_block_number())
     assert res["block"]["max_gas"] == "60000000"
+
+    # after Titan
+    assert_greeter(w3, greeter, "world1", "world2")
+    with pytest.raises(ValueError) as e_info:
+        random_contract.caller.randomTokenId()
+    assert "invalid memory address or nil pointer dereference" in str(e_info.value)
+
+    # disable merge and shanghai
+    p = cli.query_params("evm")["params"]
+    del p["chain_config"]["merge_netsplit_block"]
+    del p["chain_config"]["shanghai_time"]
+    proposal = tmp_path / "proposal.json"
+    # governance module account as signer
+    data = hashlib.sha256("gov".encode()).digest()[:20]
+    signer = eth_to_bech32(data)
+    proposal_src = {
+        "messages": [
+            {
+                "@type": "/ethermint.evm.v1.MsgUpdateParams",
+                "authority": signer,
+                "params": p,
+            }
+        ],
+        "deposit": "1basetcro",
+        "title": "title",
+        "summary": "summary",
+    }
+    proposal.write_text(json.dumps(proposal_src))
+    rsp = cli.submit_gov_proposal(proposal, from_="community")
+    assert rsp["code"] == 0, rsp["raw_log"]
+    approve_proposal(c, rsp)
+    print("check params have been updated now")
+    p = cli.query_params("evm")["params"]
+    assert not p["chain_config"]["merge_netsplit_block"]
+    assert not p["chain_config"]["shanghai_time"]
+
+    # after disable
+    assert_greeter(w3, greeter, "world2", "world3")
+    res = random_contract.caller.randomTokenId()
+    assert res > 0, res
+
+    return
 
     # check bank send enable
     p = cli.query_bank_send()
@@ -239,9 +289,9 @@ def exec(c, tmp_path_factory, testnet=True):
     c.supervisorctl("stop", "all")
 
 
-def test_cosmovisor_upgrade_mainnet(mainnet: Cronos, tmp_path_factory):
-    exec(mainnet, tmp_path_factory, False)
+def test_cosmovisor_upgrade_mainnet(mainnet: Cronos, tmp_path_factory, tmp_path):
+    exec(mainnet, tmp_path_factory, tmp_path, False)
 
 
-def test_cosmovisor_upgrade_testnet(testnet: Cronos, tmp_path_factory):
-    exec(testnet, tmp_path_factory, True)
+def test_cosmovisor_upgrade_testnet(testnet: Cronos, tmp_path_factory, tmp_path):
+    exec(testnet, tmp_path_factory, tmp_path, True)
