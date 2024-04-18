@@ -48,7 +48,9 @@ class ChainCommand:
     def __call__(self, cmd, *args, stdin=None, stderr=subprocess.STDOUT, **kwargs):
         "execute chain-maind"
         args = " ".join(build_cli_args_safe(cmd, *args, **kwargs))
-        return interact(f"{self.cmd} {args}", input=stdin, stderr=stderr)
+        cli = f"{self.cmd} {args}"
+        print("mm-cli", cli)
+        return interact(cli, input=stdin, stderr=stderr)
 
 
 class CosmosCLI:
@@ -670,7 +672,7 @@ class CosmosCLI:
             )
         )
 
-    def gov_propose_legacy(self, proposer, kind, proposal, mode="block", **kwargs):
+    def gov_propose_legacy(self, proposer, kind, proposal, mode="block", method="submit-legacy-proposal", **kwargs):
         kwargs.setdefault("gas_prices", DEFAULT_GAS_PRICE)
         kwargs.setdefault("gas", DEFAULT_GAS)
         if mode:
@@ -680,11 +682,11 @@ class CosmosCLI:
                 self.raw(
                     "tx",
                     "gov",
-                    "submit-legacy-proposal",
+                    method,
                     kind,
                     proposal["name"],
                     "-y",
-                    "--no-validate",
+                    "--no-validate" if method == "submit-legacy-proposal" else None,
                     from_=proposer,
                     # content
                     title=proposal.get("title"),
@@ -746,19 +748,21 @@ class CosmosCLI:
 
     def gov_vote(self, voter, proposal_id, option, event_query_tx=True, **kwargs):
         kwargs.setdefault("gas_prices", DEFAULT_GAS_PRICE)
-        rsp = json.loads(
-            self.raw(
-                "tx",
-                "gov",
-                "vote",
-                proposal_id,
-                option,
-                "-y",
-                from_=voter,
-                home=self.data_dir,
-                **kwargs,
-            )
+        raw = self.raw(
+            "tx",
+            "gov",
+            "vote",
+            proposal_id,
+            option,
+            "-y",
+            from_=voter,
+            home=self.data_dir,
+            **kwargs,
         )
+        # skip success log info that breaks json.loads
+        brace_index = raw.index(b"{")
+        json_part = raw[brace_index:]
+        rsp = json.loads(json_part)
         if rsp["code"] == 0 and event_query_tx:
             rsp = self.event_query_tx_for(rsp["txhash"])
         return rsp
