@@ -18,9 +18,9 @@ class Cronos:
         self._w3 = None
         self.base_dir = base_dir
         self.config = json.loads((base_dir / "config.json").read_text())
-        self.enable_auto_deployment = json.loads(
-            (base_dir / "genesis.json").read_text()
-        )["app_state"]["cronos"]["params"]["enable_auto_deployment"]
+        # self.enable_auto_deployment = json.loads(
+        #     (base_dir / "genesis.json").read_text()
+        # )["app_state"]["cronos"]["params"]["enable_auto_deployment"]
         self._use_websockets = False
         self.chain_binary = chain_binary
 

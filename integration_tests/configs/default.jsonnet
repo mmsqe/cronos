@@ -4,7 +4,7 @@
     cmd: 'cronosd',
     'start-flags': '--trace',
     config: {
-      db_backend: 'rocksdb',
+      // db_backend: 'rocksdb',
       mempool: {
         version: 'v1',
       },
