@@ -1,6 +1,6 @@
 let
   pkgs = import ../../nix { };
-  releasedGenesis = import (builtins.fetchTarball "https://github.com/crypto-org-chain/cronos/archive/v0.6.5.tar.gz") { };
+  releasedGenesis = import (builtins.fetchTarball "https://github.com/crypto-org-chain/cronos/archive/v0.5.2.tar.gz") { };
   fetchFlake = repo: rev: (pkgs.flake-compat {
     src = {
       outPath = builtins.fetchTarball "https://github.com/${repo}/archive/${rev}.tar.gz";
