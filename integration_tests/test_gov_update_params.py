@@ -1,3 +1,4 @@
+import base64
 import hashlib
 import json
 
@@ -56,10 +57,11 @@ def test_gov_update_params(cronos, tmp_path):
     cli = cronos.cosmos_cli()
 
     proposal = tmp_path / "proposal.json"
+    admin = cli.address("validator")
     # governance module account as signer
     signer = "crc10d07y265gmmuvt4z0w9aw880jnsr700jdufnyd"
     params = {
-        "cronos_admin": "crc12luku6uxehhak02py4rcz65zu0swh7wjsrw0pp",
+        "cronos_admin": admin,
         "enable_auto_deployment": False,
         "ibc_cro_denom": "ibc/6411AE2ADA1E73DB59DB151"
         "A8988F9B7D5E7E233D8414DB6817F8F1A01600000",
@@ -86,3 +88,6 @@ def test_gov_update_params(cronos, tmp_path):
     rsp = cli.query_params()
     print("params", rsp)
     assert rsp == params
+    addr = base64.b64encode(b"crc1x7x9pkfxf33l87ftspk5aetwnkr0lvlv3346cd")
+    rsp = cli.update_blocklist(addr.decode("utf-8"), from_="validator")
+    assert rsp["code"] == 0, rsp["raw_log"]
