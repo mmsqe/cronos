@@ -14,6 +14,7 @@ const (
 	TypeMsgUpdateParams       = "UpdateParams"
 	TypeMsgTurnBridge         = "TurnBridge"
 	TypeMsgUpdatePermissions  = "UpdatePermissions"
+	TypeMsgUpdateBlocklist    = "UpdateBlocklist"
 )
 
 var (
@@ -23,6 +24,7 @@ var (
 	_ sdk.Msg = &MsgUpdateParams{}
 	_ sdk.Msg = &MsgTurnBridge{}
 	_ sdk.Msg = &MsgUpdatePermissions{}
+	_ sdk.Msg = &MsgUpdateBlocklist{}
 )
 
 func NewMsgConvertVouchers(address string, coins sdk.Coins) *MsgConvertVouchers {
@@ -315,6 +317,50 @@ func (msg MsgUpdatePermissions) Type() string {
 
 // GetSignBytes ...
 func (msg *MsgUpdatePermissions) GetSignBytes() []byte {
+	bz := ModuleCdc.MustMarshalJSON(msg)
+	return sdk.MustSortJSON(bz)
+}
+
+func NewMsgUpdateBlocklist(sender string, blocklist []byte) *MsgUpdateBlocklist {
+	return &MsgUpdateBlocklist{
+		Sender:    sender,
+		Blocklist: blocklist,
+	}
+}
+
+// GetSigners returns the expected signers for a MsgUpdateBlocklist message.
+func (msg *MsgUpdateBlocklist) GetSigners() []sdk.AccAddress {
+	addr, err := sdk.AccAddressFromBech32(msg.Sender)
+	if err != nil {
+		panic(err)
+	}
+	return []sdk.AccAddress{addr}
+}
+
+// ValidateBasic ...
+func (msg *MsgUpdateBlocklist) ValidateBasic() error {
+	_, err := sdk.AccAddressFromBech32(msg.Sender)
+	if err != nil {
+		return errors.Wrapf(sdkerrors.ErrInvalidAddress, "invalid sender address (%s)", err)
+	}
+	if msg.Blocklist == nil {
+		return errors.Wrap(sdkerrors.ErrInvalidRequest, "value cannot be nil")
+	}
+	return nil
+}
+
+// Route ...
+func (msg MsgUpdateBlocklist) Route() string {
+	return RouterKey
+}
+
+// Type ...
+func (msg MsgUpdateBlocklist) Type() string {
+	return TypeMsgUpdateBlocklist
+}
+
+// GetSignBytes ...
+func (msg *MsgUpdateBlocklist) GetSignBytes() []byte {
 	bz := ModuleCdc.MustMarshalJSON(msg)
 	return sdk.MustSortJSON(bz)
 }

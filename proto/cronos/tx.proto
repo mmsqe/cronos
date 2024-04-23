@@ -32,6 +32,9 @@ service Msg {
 
   // UpdatePermissions defines a method to update cronos admins permissions
   rpc UpdatePermissions(MsgUpdatePermissions) returns (MsgUpdatePermissionsResponse);
+
+  // UpdateBlocklist defines a method to update blocklist
+  rpc UpdateBlocklist(MsgUpdateBlocklist) returns (MsgUpdateBlocklistResponse);
 }
 
 // MsgConvertVouchers represents a message to convert ibc voucher coins to
@@ -102,4 +105,12 @@ message MsgUpdatePermissions {
 // MsgUpdatePermissionsResponse defines the response type.
 message MsgUpdatePermissionsResponse {}
 
+// MsgUpdateBlocklist defines the request type for updating blocklist.
+message MsgUpdateBlocklist {
+  string sender    = 1;
+  bytes  blocklist = 2;
+}
+
+// MsgUpdateBlocklistResponse defines the response type.
+message MsgUpdateBlocklistResponse {}
 // this line is used by starport scaffolding # proto/tx/message

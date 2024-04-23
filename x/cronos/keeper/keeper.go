@@ -360,3 +360,12 @@ func (k Keeper) IBCSendPacketCallback(
 ) error {
 	return nil
 }
+
+func (k Keeper) SetBlocklist(ctx sdk.Context, blocklist []byte) error {
+	if blocklist == nil {
+		return errors.Wrap(sdkerrors.ErrInvalidRequest, "value cannot be nil")
+	}
+	store := ctx.KVStore(k.storeKey)
+	store.Set(types.KeyPrefixBlocklist, blocklist)
+	return nil
+}

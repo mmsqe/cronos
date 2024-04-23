@@ -27,6 +27,7 @@ func RegisterInterfaces(registry cdctypes.InterfaceRegistry) {
 		&MsgUpdateTokenMapping{},
 		&MsgTurnBridge{},
 		&MsgUpdatePermissions{},
+		&MsgUpdateBlocklist{},
 	)
 
 	msgservice.RegisterMsgServiceDesc(registry, &_Msg_serviceDesc)

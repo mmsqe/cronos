@@ -1,6 +1,7 @@
 package cli
 
 import (
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"strconv"
@@ -47,6 +48,7 @@ func GetTxCmd() *cobra.Command {
 	cmd.AddCommand(CmdTurnBridge())
 	cmd.AddCommand(CmdUpdatePermissions())
 	cmd.AddCommand(MigrateGenesisCmd())
+	cmd.AddCommand(CmdUpdateBlocklist())
 	return cmd
 }
 
@@ -308,6 +310,40 @@ func CmdUpdatePermissions() *cobra.Command {
 				return err
 			}
 			msg := types.NewMsgUpdatePermissions(clientCtx.GetFromAddress().String(), argsAddress, argPermissions)
+			if err := msg.ValidateBasic(); err != nil {
+				return err
+			}
+			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
+		},
+	}
+
+	flags.AddTxFlagsToCmd(cmd)
+	return cmd
+}
+
+// CmdUpdateBlocklist returns a CLI command handler for updating blocklist
+func CmdUpdateBlocklist() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "update-blocklist [base64-encoded-data]",
+		Short: "Update blocklist with base64-encoded data",
+		Long: fmt.Sprintf(`Update blocklist.
+
+Example:
+$ %s tx cronos update-blocklist Y3JjMXEwNGpld2h4dzR4eHUzdmxnM3JjODUyNDBoOXE3bnM2aGdsemFn
+			`, version.AppName),
+		Args: cobra.ExactArgs(1),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientTxContext(cmd)
+			if err != nil {
+				return err
+			}
+
+			base64String := args[0]
+			byteArray, err := base64.StdEncoding.DecodeString(base64String)
+			if err != nil {
+				return fmt.Errorf("failed to decode base64 string: %v", err)
+			}
+			msg := types.NewMsgUpdateBlocklist(clientCtx.GetFromAddress().String(), byteArray)
 			if err := msg.ValidateBasic(); err != nil {
 				return err
 			}

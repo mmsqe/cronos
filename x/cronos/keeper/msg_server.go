@@ -123,3 +123,15 @@ func (k msgServer) UpdatePermissions(goCtx context.Context, msg *types.MsgUpdate
 
 	return &types.MsgUpdatePermissionsResponse{}, nil
 }
+
+func (k msgServer) UpdateBlocklist(goCtx context.Context, msg *types.MsgUpdateBlocklist) (*types.MsgUpdateBlocklistResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+	admin := k.GetParams(ctx).CronosAdmin
+	if msg.Sender != admin {
+		return nil, errors.Wrapf(govtypes.ErrInvalidSigner, "invalid sender; expected %s, got %s", admin, msg.Sender)
+	}
+	if err := k.SetBlocklist(ctx, msg.Blocklist); err != nil {
+		return nil, err
+	}
+	return &types.MsgUpdateBlocklistResponse{}, nil
+}
