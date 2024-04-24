@@ -38,6 +38,6 @@ func (h *ProposalHandler) ProcessProposal() sdk.ProcessProposalHandler {
 		store := ctx.KVStore(h.cronosKey)
 		res := store.Get(cronostypes.KeyPrefixBlocklist)
 		h.refreshBlocklistHandler(strings.Split(string(res), ","))
-		return abci.ResponseProcessProposal{Status: abci.ResponseProcessProposal_ACCEPT}
+		return h.defaultProcessProposalHandler(ctx, req)
 	}
 }
