@@ -384,24 +384,24 @@ func New(
 	appCodec := encodingConfig.Codec
 	cdc := encodingConfig.Amino
 	interfaceRegistry := encodingConfig.InterfaceRegistry
-
+	keys, memKeys, tkeys := StoreKeys(skipGravity)
+	cronosKey := keys[cronostypes.StoreKey]
 	baseAppOptions = memiavlstore.SetupMemIAVL(logger, homePath, appOpts, false, false, baseAppOptions)
 	// NOTE we use custom transaction decoder that supports the sdk.Tx interface instead of sdk.StdTx
 	// Setup Mempool and Proposal Handlers
 	baseAppOptions = append(baseAppOptions, func(app *baseapp.BaseApp) {
 		mempool := mempool.NoOpMempool{}
 		app.SetMempool(mempool)
+		h := cronos.NewProposalHandler(cronosKey, mempool, app)
 		handler := baseapp.NewDefaultProposalHandler(mempool, app)
 		app.SetPrepareProposal(handler.PrepareProposalHandler())
-		app.SetProcessProposal(handler.ProcessProposalHandler())
+		app.SetProcessProposal(h.ProcessProposal())
 	})
 	bApp := baseapp.NewBaseApp(Name, logger, db, encodingConfig.TxConfig.TxDecoder(), baseAppOptions...)
 
 	bApp.SetCommitMultiStoreTracer(traceStore)
 	bApp.SetVersion(version.Version)
 	bApp.SetInterfaceRegistry(interfaceRegistry)
-
-	keys, memKeys, tkeys := StoreKeys(skipGravity)
 
 	app := &App{
 		BaseApp:           bApp,
@@ -567,7 +567,7 @@ func New(
 
 	app.CronosKeeper = *cronoskeeper.NewKeeper(
 		appCodec,
-		keys[cronostypes.StoreKey],
+		cronosKey,
 		keys[cronostypes.MemStoreKey],
 		app.BankKeeper,
 		app.TransferKeeper,
