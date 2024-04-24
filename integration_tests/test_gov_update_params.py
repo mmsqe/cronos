@@ -94,10 +94,11 @@ def test_gov_update_params(cronos, tmp_path):
     rsp = cli.query_params()
     print("params", rsp)
     assert rsp == params
-    addr = base64.b64encode(b"crc1x7x9pkfxf33l87ftspk5aetwnkr0lvlv3346cd")
-    rsp = cli.update_blocklist(addr.decode("utf-8"), from_="validator")
+    addr = cli.address("user")
+    data = base64.b64encode(addr.encode("ascii")).decode("utf-8")
+    rsp = cli.update_blocklist(data, from_="validator")
     assert rsp["code"] == 0, rsp["raw_log"]
     wait_for_new_blocks(cli, 1)
-    rsp = cli.transfer("community", cli.address("validator"), "1basecro")
+    rsp = cli.transfer(addr, cli.address("validator"), "1basecro")
     assert rsp["code"] != 0
     assert "signer is blocked" in rsp["raw_log"]
