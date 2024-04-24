@@ -387,15 +387,20 @@ func New(
 	keys, memKeys, tkeys := StoreKeys(skipGravity)
 	cronosKey := keys[cronostypes.StoreKey]
 	baseAppOptions = memiavlstore.SetupMemIAVL(logger, homePath, appOpts, false, false, baseAppOptions)
+	txConfig := encodingConfig.TxConfig
+	maxTxGasWanted := cast.ToUint64(appOpts.Get(srvflags.EVMMaxTxGasWanted))
 	// NOTE we use custom transaction decoder that supports the sdk.Tx interface instead of sdk.StdTx
 	// Setup Mempool and Proposal Handlers
-	baseAppOptions = append(baseAppOptions, func(app *baseapp.BaseApp) {
+	var app *App
+	baseAppOptions = append(baseAppOptions, func(bapp *baseapp.BaseApp) {
 		mempool := mempool.NoOpMempool{}
-		app.SetMempool(mempool)
-		h := cronos.NewProposalHandler(cronosKey, mempool, app)
-		handler := baseapp.NewDefaultProposalHandler(mempool, app)
-		app.SetPrepareProposal(handler.PrepareProposalHandler())
-		app.SetProcessProposal(h.ProcessProposal())
+		bapp.SetMempool(mempool)
+		h := cronos.NewProposalHandler(cronosKey, mempool, bapp, func(blacklist []string) {
+			app.setAnteHandler(txConfig, maxTxGasWanted, blacklist)
+		})
+		handler := baseapp.NewDefaultProposalHandler(mempool, bapp)
+		bapp.SetPrepareProposal(handler.PrepareProposalHandler())
+		bapp.SetProcessProposal(h.ProcessProposal())
 	})
 	bApp := baseapp.NewBaseApp(Name, logger, db, encodingConfig.TxConfig.TxDecoder(), baseAppOptions...)
 
@@ -403,7 +408,7 @@ func New(
 	bApp.SetVersion(version.Version)
 	bApp.SetInterfaceRegistry(interfaceRegistry)
 
-	app := &App{
+	app = &App{
 		BaseApp:           bApp,
 		cdc:               cdc,
 		appCodec:          appCodec,

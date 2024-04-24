@@ -1,7 +1,7 @@
 package cronos
 
 import (
-	"fmt"
+	"strings"
 
 	abci "github.com/cometbft/cometbft/abci/types"
 	"github.com/cosmos/cosmos-sdk/baseapp"
@@ -11,20 +11,25 @@ import (
 	cronostypes "github.com/crypto-org-chain/cronos/v2/x/cronos/types"
 )
 
+type refreshBlocklistHandler func(blacklist []string)
+
 type ProposalHandler struct {
 	cronosKey                     *storetypes.KVStoreKey
 	defaultProcessProposalHandler sdk.ProcessProposalHandler
+	refreshBlocklistHandler       refreshBlocklistHandler
 }
 
 func NewProposalHandler(
 	cronosKey *storetypes.KVStoreKey,
 	mp mempool.Mempool,
 	txVerifier baseapp.ProposalTxVerifier,
+	refreshBlocklistHandler refreshBlocklistHandler,
 ) *ProposalHandler {
 	defaultHandler := baseapp.NewDefaultProposalHandler(mp, txVerifier)
 	return &ProposalHandler{
 		cronosKey:                     cronosKey,
 		defaultProcessProposalHandler: defaultHandler.ProcessProposalHandler(),
+		refreshBlocklistHandler:       refreshBlocklistHandler,
 	}
 }
 
@@ -32,7 +37,7 @@ func (h *ProposalHandler) ProcessProposal() sdk.ProcessProposalHandler {
 	return func(ctx sdk.Context, req abci.RequestProcessProposal) abci.ResponseProcessProposal {
 		store := ctx.KVStore(h.cronosKey)
 		res := store.Get(cronostypes.KeyPrefixBlocklist)
-		fmt.Println("mm-res", string(res))
+		h.refreshBlocklistHandler(strings.Split(string(res), ","))
 		return abci.ResponseProcessProposal{Status: abci.ResponseProcessProposal_ACCEPT}
 	}
 }
