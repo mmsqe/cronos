@@ -4,7 +4,13 @@ import json
 
 import pytest
 
-from .utils import CONTRACTS, approve_proposal, deploy_contract, eth_to_bech32
+from .utils import (
+    CONTRACTS,
+    approve_proposal,
+    deploy_contract,
+    eth_to_bech32,
+    wait_for_new_blocks,
+)
 
 pytestmark = pytest.mark.gov
 
@@ -91,3 +97,7 @@ def test_gov_update_params(cronos, tmp_path):
     addr = base64.b64encode(b"crc1x7x9pkfxf33l87ftspk5aetwnkr0lvlv3346cd")
     rsp = cli.update_blocklist(addr.decode("utf-8"), from_="validator")
     assert rsp["code"] == 0, rsp["raw_log"]
+    wait_for_new_blocks(cli, 1)
+    rsp = cli.transfer("community", cli.address("validator"), "1basecro")
+    assert rsp["code"] != 0
+    assert "signer is blocked" in rsp["raw_log"]

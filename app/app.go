@@ -318,6 +318,8 @@ type App struct {
 
 	invCheckPeriod uint
 
+	blockedMap map[string]struct{}
+
 	// keys to access the substores
 	keys    map[string]*storetypes.KVStoreKey
 	tkeys   map[string]*storetypes.TransientStoreKey
@@ -380,23 +382,20 @@ func New(
 	homePath string, invCheckPeriod uint, encodingConfig ethermint.EncodingConfig,
 	// this line is used by starport scaffolding # stargate/app/newArgument
 	appOpts servertypes.AppOptions, baseAppOptions ...func(*baseapp.BaseApp),
-) *App {
+) (app *App) {
 	appCodec := encodingConfig.Codec
 	cdc := encodingConfig.Amino
 	interfaceRegistry := encodingConfig.InterfaceRegistry
 	keys, memKeys, tkeys := StoreKeys(skipGravity)
 	cronosKey := keys[cronostypes.StoreKey]
 	baseAppOptions = memiavlstore.SetupMemIAVL(logger, homePath, appOpts, false, false, baseAppOptions)
-	txConfig := encodingConfig.TxConfig
-	maxTxGasWanted := cast.ToUint64(appOpts.Get(srvflags.EVMMaxTxGasWanted))
 	// NOTE we use custom transaction decoder that supports the sdk.Tx interface instead of sdk.StdTx
 	// Setup Mempool and Proposal Handlers
-	var app *App
 	baseAppOptions = append(baseAppOptions, func(bapp *baseapp.BaseApp) {
 		mempool := mempool.NoOpMempool{}
 		bapp.SetMempool(mempool)
 		h := cronos.NewProposalHandler(cronosKey, mempool, bapp, func(blacklist []string) {
-			app.setAnteHandler(txConfig, maxTxGasWanted, blacklist)
+			app.setBlacklist(blacklist)
 		})
 		handler := baseapp.NewDefaultProposalHandler(mempool, bapp)
 		bapp.SetPrepareProposal(handler.PrepareProposalHandler())
@@ -924,8 +923,11 @@ func New(
 	return app
 }
 
-// use Ethermint's custom AnteHandler
-func (app *App) setAnteHandler(txConfig client.TxConfig, maxGasWanted uint64, blacklist []string) error {
+func (app *App) getBlockedMap() map[string]struct{} {
+	return app.blockedMap
+}
+
+func (app *App) setBlacklist(blacklist []string) error {
 	if len(blacklist) > 0 {
 		sort.Strings(blacklist)
 		// hash blacklist concatenated
@@ -952,7 +954,14 @@ func (app *App) setAnteHandler(txConfig client.TxConfig, maxGasWanted uint64, bl
 
 		blockedMap[string(addr)] = struct{}{}
 	}
-	blockAddressDecorator := NewBlockAddressesDecorator(blockedMap)
+	app.blockedMap = blockedMap
+	return nil
+}
+
+// use Ethermint's custom AnteHandler
+func (app *App) setAnteHandler(txConfig client.TxConfig, maxGasWanted uint64, blacklist []string) error {
+	app.setBlacklist(blacklist)
+	blockAddressDecorator := NewBlockAddressesDecorator(app.getBlockedMap)
 	options := evmante.HandlerOptions{
 		AccountKeeper:          app.AccountKeeper,
 		BankKeeper:             app.BankKeeper,
