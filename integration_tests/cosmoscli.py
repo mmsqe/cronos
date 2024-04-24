@@ -333,7 +333,7 @@ class CosmosCLI:
 
     def transfer(self, from_, to, coins, generate_only=False, fees=None, **kwargs):
         kwargs.setdefault("gas_prices", DEFAULT_GAS_PRICE)
-        return json.loads(
+        rsp = json.loads(
             self.raw(
                 "tx",
                 "bank",
@@ -348,6 +348,9 @@ class CosmosCLI:
                 **kwargs,
             )
         )
+        if rsp["code"] == 0:
+            rsp = self.event_query_tx_for(rsp["txhash"])
+        return rsp
 
     def get_delegated_amount(self, which_addr):
         return json.loads(
@@ -577,96 +580,6 @@ class CosmosCLI:
                 node=self.node_rpc,
                 keyring_backend="test",
                 chain_id=self.chain_id,
-            )
-        )
-
-    def create_validator(
-        self,
-        amount,
-        moniker=None,
-        commission_max_change_rate="0.01",
-        commission_rate="0.1",
-        commission_max_rate="0.2",
-        min_self_delegation="1",
-        identity="",
-        website="",
-        security_contact="",
-        details="",
-    ):
-        """MsgCreateValidator
-        create the node with create_node before call this"""
-        pubkey = (
-            "'"
-            + (
-                self.raw(
-                    "tendermint",
-                    "show-validator",
-                    home=self.data_dir,
-                )
-                .strip()
-                .decode()
-            )
-            + "'"
-        )
-        return json.loads(
-            self.raw(
-                "tx",
-                "staking",
-                "create-validator",
-                "-y",
-                from_=self.address("validator"),
-                amount=amount,
-                pubkey=pubkey,
-                min_self_delegation=min_self_delegation,
-                # commision
-                commission_rate=commission_rate,
-                commission_max_rate=commission_max_rate,
-                commission_max_change_rate=commission_max_change_rate,
-                # description
-                moniker=moniker,
-                identity=identity,
-                website=website,
-                security_contact=security_contact,
-                details=details,
-                # basic
-                home=self.data_dir,
-                node=self.node_rpc,
-                keyring_backend="test",
-                chain_id=self.chain_id,
-            )
-        )
-
-    def edit_validator(
-        self,
-        commission_rate=None,
-        moniker=None,
-        identity=None,
-        website=None,
-        security_contact=None,
-        details=None,
-    ):
-        """MsgEditValidator"""
-        options = dict(
-            commission_rate=commission_rate,
-            # description
-            moniker=moniker,
-            identity=identity,
-            website=website,
-            security_contact=security_contact,
-            details=details,
-        )
-        return json.loads(
-            self.raw(
-                "tx",
-                "staking",
-                "edit-validator",
-                "-y",
-                from_=self.address("validator"),
-                home=self.data_dir,
-                node=self.node_rpc,
-                keyring_backend="test",
-                chain_id=self.chain_id,
-                **{k: v for k, v in options.items() if v is not None},
             )
         )
 
