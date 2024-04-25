@@ -388,15 +388,17 @@ func New(
 	interfaceRegistry := encodingConfig.InterfaceRegistry
 	keys, memKeys, tkeys := StoreKeys(skipGravity)
 	cronosKey := keys[cronostypes.StoreKey]
+	stakingKey := keys[stakingtypes.StoreKey]
 	baseAppOptions = memiavlstore.SetupMemIAVL(logger, homePath, appOpts, false, false, baseAppOptions)
 	// NOTE we use custom transaction decoder that supports the sdk.Tx interface instead of sdk.StdTx
 	// Setup Mempool and Proposal Handlers
 	baseAppOptions = append(baseAppOptions, func(bapp *baseapp.BaseApp) {
 		mempool := mempool.NoOpMempool{}
 		bapp.SetMempool(mempool)
-		h := cronos.NewProposalHandler(cronosKey, mempool, bapp, func(blacklist []string) {
-			app.setBlacklist(blacklist)
-		})
+		h := cronos.NewProposalHandler(
+			appCodec, cronosKey, stakingKey, mempool, bapp,
+			func(blacklist []string) { app.setBlacklist(blacklist) },
+		)
 		handler := baseapp.NewDefaultProposalHandler(mempool, bapp)
 		bapp.SetPrepareProposal(handler.PrepareProposalHandler())
 		bapp.SetProcessProposal(h.ProcessProposal())
@@ -451,7 +453,7 @@ func New(
 		appCodec, keys[banktypes.StoreKey], app.AccountKeeper, app.BlockedAddrs(), authAddr,
 	)
 	app.StakingKeeper = stakingkeeper.NewKeeper(
-		appCodec, keys[stakingtypes.StoreKey], app.AccountKeeper, app.BankKeeper, authAddr,
+		appCodec, stakingKey, app.AccountKeeper, app.BankKeeper, authAddr,
 	)
 	app.MintKeeper = mintkeeper.NewKeeper(
 		appCodec, keys[minttypes.StoreKey], app.StakingKeeper,
