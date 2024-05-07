@@ -1,4 +1,5 @@
 import "hardhat-typechain";
+import "hardhat-storage-layout";
 
 module.exports = {
   solidity: {
