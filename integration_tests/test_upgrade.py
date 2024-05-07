@@ -17,7 +17,9 @@ from .utils import (
     KEYS,
     approve_proposal,
     deploy_contract,
+    derive_new_account,
     edit_ini_sections,
+    fund_acc,
     get_consensus_params,
     get_send_enable,
     send_transaction,
@@ -229,6 +231,18 @@ def exec(c, tmp_path_factory):
     )
     print("old values", old_height, old_balance, old_base_fee)
 
+    acc = derive_new_account()
+    fund_acc(w3, acc)
+    addr = "0xa16226396d79dc7B3Bc70DE0daCa4Eef11742a9E"
+    sc = deploy_contract(
+        w3,
+        CONTRACTS["TokenDistributor"],
+        (addr, addr, 1, [0], [0], [0], 1, 1),
+        key=acc.key,
+    )
+    owner = sc.functions.owner().call()
+    print("mm-owner-bf", owner, sc.address)
+    assert owner == "0xeBF80fF512D5aF394c2F86B39Aa92670d6D3B15f", owner
     do_upgrade("v1.3", target_height1)
     cli = c.cosmos_cli()
 
@@ -244,6 +258,9 @@ def exec(c, tmp_path_factory):
         },
     )
     assert receipt.status == 1
+    owner = sc.functions.owner().call()
+    print("mm-owner-af", owner, sc.address)
+    assert owner == "0x730CbB94480d50788481373B43d83133e171367e", owner
 
     # deploy contract should still work
     deploy_contract(w3, CONTRACTS["Greeter"])

@@ -60,6 +60,7 @@ TEST_CONTRACTS = {
     "TestBank": "TestBank.sol",
     "TestICA": "TestICA.sol",
     "Random": "Random.sol",
+    "TokenDistributor": "TokenDistributor.sol",
 }
 
 
@@ -732,3 +733,18 @@ def get_send_enable(port):
     url = f"http://127.0.0.1:{port}/cosmos/bank/v1beta1/params"
     raw = requests.get(url).json()
     return raw["params"]["send_enabled"]
+
+
+def derive_new_account(n=1):
+    # derive a new address
+    account_path = f"m/44'/60'/0'/0/{n}"
+    mnemonic = os.getenv("COMMUNITY_MNEMONIC")
+    return Account.from_mnemonic(mnemonic, account_path=account_path)
+
+def fund_acc(w3, acc):
+    fund = 3000000000000000000
+    addr = acc.address
+    if w3.eth.get_balance(addr, "latest") == 0:
+        tx = {"to": addr, "value": fund, "gasPrice": w3.eth.gas_price}
+        send_transaction(w3, tx)
+        assert w3.eth.get_balance(addr, "latest") == fund

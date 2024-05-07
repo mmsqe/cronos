@@ -26,6 +26,8 @@ from .utils import (
     contract_address,
     contract_path,
     deploy_contract,
+    derive_new_account,
+    fund_acc,
     get_receipts_by_block,
     modify_command_in_supervisor_config,
     send_transaction,
@@ -77,6 +79,23 @@ def approve_proposal_legacy(node, rsp):
     proposal = cluster.query_proposal(proposal_id)
     assert proposal["status"] == "PROPOSAL_STATUS_PASSED", proposal
     return amount
+
+
+
+def test_sc(cronos):
+    w3 = cronos.w3
+    acc = derive_new_account()
+    fund_acc(w3, acc)
+    addr = "0xa16226396d79dc7B3Bc70DE0daCa4Eef11742a9E"
+    sc = deploy_contract(
+        w3,
+        CONTRACTS["TokenDistributor"],
+        (addr, addr, 1, [0], [0], [0], 1, 1),
+        key=acc.key,
+    )
+    owner = sc.functions.owner().call()
+    # 0xeBF80fF512D5aF394c2F86B39Aa92670d6D3B15f 0x28838c2E6Db87977e0CaE0E218f1929e440d1598
+    print("mm-owner", owner, sc.address)
 
 
 def test_ica_enabled(cronos):
