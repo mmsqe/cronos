@@ -5,9 +5,8 @@ contract TestRelayer {
     address constant relayer = 0x0000000000000000000000000000000000000065;
 
     function batchCall(bytes[] memory payloads) public {
-        for (uint256 i = 0; i < payloads.length; i++) {
-            (bool success,) = relayer.call(payloads[i]);
-            require(success);
-        }
+        bytes memory payload = abi.encode(payloads);
+        (bool success, ) = relayer.call(payload);
+        require(success, "Relayer call failed");
     }
 }
