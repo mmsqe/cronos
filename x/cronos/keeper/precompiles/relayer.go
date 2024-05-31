@@ -47,8 +47,8 @@ const (
 	Timeout               = "timeout"
 	TimeoutOnClose        = "timeoutOnClose"
 
-	GasWhenReceiverChainIsSource    = 51705
-	GasWhenReceiverChainIsNotSource = 144025
+	GasWhenReceiverChainIsSource    = 121578
+	GasWhenReceiverChainIsNotSource = 215038
 )
 
 func init() {
@@ -60,35 +60,35 @@ func init() {
 		copy(methodID[:], irelayerABI.Methods[methodName].ID[:4])
 		switch methodName {
 		case CreateClient:
-			relayerGasRequiredByMethod[methodID] = 117462
+			relayerGasRequiredByMethod[methodID] = 114990
 		case UpdateClient:
-			relayerGasRequiredByMethod[methodID] = 111894
+			relayerGasRequiredByMethod[methodID] = 109689
 		case UpgradeClient:
 			relayerGasRequiredByMethod[methodID] = 400000
 		case ConnectionOpenInit:
-			relayerGasRequiredByMethod[methodID] = 19755
+			relayerGasRequiredByMethod[methodID] = 89589
 		case ConnectionOpenTry:
-			relayerGasRequiredByMethod[methodID] = 38468
+			relayerGasRequiredByMethod[methodID] = 108323
 		case ConnectionOpenAck:
-			relayerGasRequiredByMethod[methodID] = 29603
+			relayerGasRequiredByMethod[methodID] = 99446
 		case ConnectionOpenConfirm:
-			relayerGasRequiredByMethod[methodID] = 12865
+			relayerGasRequiredByMethod[methodID] = 82735
 		case ChannelOpenInit:
-			relayerGasRequiredByMethod[methodID] = 68701
+			relayerGasRequiredByMethod[methodID] = 138568
 		case ChannelOpenTry:
-			relayerGasRequiredByMethod[methodID] = 70562
+			relayerGasRequiredByMethod[methodID] = 140432
 		case ChannelOpenAck:
-			relayerGasRequiredByMethod[methodID] = 22127
+			relayerGasRequiredByMethod[methodID] = 92000
 		case ChannelOpenConfirm:
-			relayerGasRequiredByMethod[methodID] = 21190
+			relayerGasRequiredByMethod[methodID] = 91060
 		case ChannelCloseConfirm:
-			relayerGasRequiredByMethod[methodID] = 31199
+			relayerGasRequiredByMethod[methodID] = 101072
 		case RecvPacket:
 			relayerGasRequiredByMethod[methodID] = GasWhenReceiverChainIsNotSource
 		case Acknowledgement:
-			relayerGasRequiredByMethod[methodID] = 61781
+			relayerGasRequiredByMethod[methodID] = 131657
 		case Timeout:
-			relayerGasRequiredByMethod[methodID] = 104283
+			relayerGasRequiredByMethod[methodID] = 174147
 		default:
 			relayerGasRequiredByMethod[methodID] = 100000
 		}
