@@ -26,6 +26,19 @@ type Executor struct {
 	converter statedb.EventConverter
 }
 
+func extractMsg[Req any, PReq interface {
+	*Req
+	NativeMessage
+}](
+	e *Executor,
+) (PReq, error) {
+	msg := PReq(new(Req))
+	if err := e.cdc.Unmarshal(e.input, msg); err != nil {
+		return nil, fmt.Errorf("fail to Unmarshal %T %w", msg, err)
+	}
+	return msg, nil
+}
+
 // exec is a generic function that executes the given action in statedb, and marshal/unmarshal the input/output
 func exec[Req any, PReq interface {
 	*Req
@@ -34,9 +47,9 @@ func exec[Req any, PReq interface {
 	e *Executor,
 	action func(context.Context, PReq) (Resp, error),
 ) ([]byte, error) {
-	msg := PReq(new(Req))
-	if err := e.cdc.Unmarshal(e.input, msg); err != nil {
-		return nil, fmt.Errorf("fail to Unmarshal %T %w", msg, err)
+	msg, err := extractMsg[Req, PReq](e)
+	if err != nil {
+		return nil, err
 	}
 
 	signers := msg.GetSigners()

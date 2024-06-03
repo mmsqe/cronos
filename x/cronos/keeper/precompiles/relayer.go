@@ -5,26 +5,33 @@ import (
 	"fmt"
 
 	"cosmossdk.io/log"
+	sdkmath "cosmossdk.io/math"
 	"github.com/cosmos/cosmos-sdk/codec"
+	"github.com/cosmos/gogoproto/proto"
 	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core"
 	"github.com/ethereum/go-ethereum/core/vm"
 	"github.com/ethereum/go-ethereum/params"
 
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	ibctransfertypes "github.com/cosmos/ibc-go/v8/modules/apps/transfer/types"
+	"github.com/cosmos/cosmos-sdk/client"
+	"github.com/cosmos/cosmos-sdk/client/tx"
+	cdctypes "github.com/cosmos/cosmos-sdk/codec/types"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/tx/signing"
+	clienttypes "github.com/cosmos/ibc-go/v8/modules/core/02-client/types"
+	connectiontypes "github.com/cosmos/ibc-go/v8/modules/core/03-connection/types"
 	channeltypes "github.com/cosmos/ibc-go/v8/modules/core/04-channel/types"
 	cronosevents "github.com/crypto-org-chain/cronos/v2/x/cronos/events"
 	"github.com/crypto-org-chain/cronos/v2/x/cronos/events/bindings/cosmos/precompile/relayer"
 	"github.com/crypto-org-chain/cronos/v2/x/cronos/types"
+	ethermint "github.com/evmos/ethermint/types"
 )
 
 var (
 	irelayerABI                abi.ABI
 	relayerContractAddress     = common.BytesToAddress([]byte{101})
 	relayerMethodNamedByMethod = map[[4]byte]string{}
-	relayerGasRequiredByMethod = map[[4]byte]uint64{}
 )
 
 const (
@@ -46,72 +53,37 @@ const (
 	Acknowledgement       = "acknowledgement"
 	Timeout               = "timeout"
 	TimeoutOnClose        = "timeoutOnClose"
-
-	GasWhenReceiverChainIsSource    = 121578
-	GasWhenReceiverChainIsNotSource = 215038
-	AnteCost                        = 69843
 )
 
 func init() {
 	if err := irelayerABI.UnmarshalJSON([]byte(relayer.RelayerFunctionsMetaData.ABI)); err != nil {
 		panic(err)
 	}
-	for methodName := range irelayerABI.Methods {
-		var methodID [4]byte
-		copy(methodID[:], irelayerABI.Methods[methodName].ID[:4])
-		switch methodName {
-		case CreateClient:
-			relayerGasRequiredByMethod[methodID] = 114990
-		case UpdateClient:
-			relayerGasRequiredByMethod[methodID] = 109689
-		case UpgradeClient:
-			relayerGasRequiredByMethod[methodID] = 400000
-		case ConnectionOpenInit:
-			relayerGasRequiredByMethod[methodID] = 89589
-		case ConnectionOpenTry:
-			relayerGasRequiredByMethod[methodID] = 108323
-		case ConnectionOpenAck:
-			relayerGasRequiredByMethod[methodID] = 99446
-		case ConnectionOpenConfirm:
-			relayerGasRequiredByMethod[methodID] = 82735
-		case ChannelOpenInit:
-			relayerGasRequiredByMethod[methodID] = 138568
-		case ChannelOpenTry:
-			relayerGasRequiredByMethod[methodID] = 140432
-		case ChannelOpenAck:
-			relayerGasRequiredByMethod[methodID] = 92000
-		case ChannelOpenConfirm:
-			relayerGasRequiredByMethod[methodID] = 91060
-		case ChannelCloseConfirm:
-			relayerGasRequiredByMethod[methodID] = 101072
-		case RecvPacket:
-			relayerGasRequiredByMethod[methodID] = GasWhenReceiverChainIsNotSource
-		case Acknowledgement:
-			relayerGasRequiredByMethod[methodID] = 131657
-		case Timeout:
-			relayerGasRequiredByMethod[methodID] = 174147
-		default:
-			relayerGasRequiredByMethod[methodID] = 100000
-		}
-		relayerMethodNamedByMethod[methodID] = methodName
-	}
 }
+
+type SimulateFn func(txBytes []byte) (sdk.GasInfo, *sdk.Result, error)
 
 type RelayerContract struct {
 	BaseContract
 
+	ctx         sdk.Context
 	cdc         codec.Codec
+	txConfig    client.TxConfig
 	ibcKeeper   types.IbcKeeper
+	simulate    SimulateFn
 	logger      log.Logger
 	isHomestead bool
 	isIstanbul  bool
 	isShanghai  bool
 }
 
-func NewRelayerContract(ibcKeeper types.IbcKeeper, cdc codec.Codec, rules params.Rules, logger log.Logger) vm.PrecompiledContract {
+func NewRelayerContract(ctx sdk.Context, txConfig client.TxConfig, ibcKeeper types.IbcKeeper, simulate SimulateFn, cdc codec.Codec, rules params.Rules, logger log.Logger) vm.PrecompiledContract {
 	return &RelayerContract{
 		BaseContract: NewBaseContract(relayerContractAddress),
+		ctx:          ctx,
+		txConfig:     txConfig,
 		ibcKeeper:    ibcKeeper,
+		simulate:     simulate,
 		cdc:          cdc,
 		isHomestead:  rules.IsHomestead,
 		isIstanbul:   rules.IsIstanbul,
@@ -144,59 +116,143 @@ func unpackInput(input []byte) ([][]byte, abi.Type, error) {
 // RequiredGas calculates the contract gas use
 // `max(0, len(input) * DefaultTxSizeCostPerByte + requiredGasTable[methodPrefix] - intrinsicGas)`
 func (bc *RelayerContract) RequiredGas(input []byte) (finalGas uint64) {
+	baseCost := uint64(15500)
 	inputs, _, err := unpackInput(input)
 	if err != nil {
 		panic(err)
 	}
 
-	for i, input := range inputs {
-		// base cost to prevent large input size
-		inputLen := len(input)
-		baseCost := uint64(inputLen) * authtypes.DefaultTxSizeCostPerByte
+	var msgs []proto.Message
+	var signer sdk.AccAddress
+	intrinsicGasTotal := uint64(0)
+	for _, input := range inputs {
 		var methodID [4]byte
 		copy(methodID[:], input[:4])
-		requiredGas, ok := relayerGasRequiredByMethod[methodID]
 		method, err := irelayerABI.MethodById(methodID[:])
 		if err != nil {
 			panic(err)
 		}
-		if method.Name == RecvPacket {
-			args, err := method.Inputs.Unpack(input[4:])
-			if err != nil {
-				panic(err)
-			}
-			i := args[0].([]byte)
-			var msg channeltypes.MsgRecvPacket
-			if err = bc.cdc.Unmarshal(i, &msg); err != nil {
-				panic(err)
-			}
-			var data ibctransfertypes.FungibleTokenPacketData
-			if err = ibctransfertypes.ModuleCdc.UnmarshalJSON(msg.Packet.GetData(), &data); err != nil {
-				panic(err)
-			}
-			if ibctransfertypes.ReceiverChainIsSource(msg.Packet.GetSourcePort(), msg.Packet.GetSourceChannel(), data.Denom) {
-				requiredGas = GasWhenReceiverChainIsSource
-			}
+		args, err := method.Inputs.Unpack(input[4:])
+		if err != nil {
+			panic(err)
 		}
-		if i > 0 {
-			requiredGas -= AnteCost
+		i := args[0].([]byte)
+
+		e := &Executor{
+			cdc:   bc.cdc,
+			input: i,
 		}
-		intrinsicGas, _ := core.IntrinsicGas(input, nil, false, bc.isHomestead, bc.isIstanbul, bc.isShanghai)
-		if !ok {
-			requiredGas = 0
+		var msg NativeMessage
+		switch method.Name {
+		case CreateClient:
+			msg, err = extractMsg[clienttypes.MsgCreateClient](e)
+		case UpdateClient:
+			msg, err = extractMsg[clienttypes.MsgUpdateClient](e)
+		case UpgradeClient:
+			msg, err = extractMsg[clienttypes.MsgUpgradeClient](e)
+		case ConnectionOpenInit:
+			msg, err = extractMsg[connectiontypes.MsgConnectionOpenInit](e)
+		case ConnectionOpenTry:
+			msg, err = extractMsg[connectiontypes.MsgConnectionOpenTry](e)
+		case ConnectionOpenAck:
+			msg, err = extractMsg[connectiontypes.MsgConnectionOpenAck](e)
+		case ConnectionOpenConfirm:
+			msg, err = extractMsg[connectiontypes.MsgConnectionOpenConfirm](e)
+		case ChannelOpenInit:
+			msg, err = extractMsg[channeltypes.MsgChannelOpenInit](e)
+		case ChannelOpenTry:
+			msg, err = extractMsg[channeltypes.MsgChannelOpenTry](e)
+		case ChannelOpenAck:
+			msg, err = extractMsg[channeltypes.MsgChannelOpenAck](e)
+		case ChannelOpenConfirm:
+			msg, err = extractMsg[channeltypes.MsgChannelOpenConfirm](e)
+		case ChannelCloseInit:
+			msg, err = extractMsg[channeltypes.MsgChannelCloseInit](e)
+		case ChannelCloseConfirm:
+			msg, err = extractMsg[channeltypes.MsgChannelCloseConfirm](e)
+		case RecvPacket:
+			msg, err = extractMsg[channeltypes.MsgRecvPacket](e)
+		case Acknowledgement:
+			msg, err = extractMsg[channeltypes.MsgAcknowledgement](e)
+		case Timeout:
+			msg, err = extractMsg[channeltypes.MsgTimeout](e)
+		case TimeoutOnClose:
+			msg, err = extractMsg[channeltypes.MsgTimeoutOnClose](e)
+		default:
+			panic(fmt.Errorf("unknown method: %s", method.Name))
 		}
-		gas := requiredGas + baseCost
-		if gas < intrinsicGas {
-			gas = 0
-		} else {
-			gas -= intrinsicGas
-			finalGas += gas
+		if err != nil {
+			panic(err)
 		}
 
+		msgs = append(msgs, msg)
+		if signer == nil {
+			signers := msg.GetSigners()
+			if len(signers) != 1 {
+				panic(errors.New("don't support multi-signers message"))
+			}
+			signer = signers[0]
+		}
+		intrinsicGas, _ := core.IntrinsicGas(input, nil, false, bc.isHomestead, bc.isIstanbul, bc.isShanghai)
 		methodName := relayerMethodNamedByMethod[methodID]
-		bc.logger.Debug("required", "gas", gas, "method", methodName, "len", inputLen, "intrinsic", intrinsicGas)
+		fmt.Println("mm-required", methodName, "intrinsic", intrinsicGas)
+		intrinsicGasTotal += intrinsicGas
 	}
-	return finalGas
+	i, err := bc.buildSimTx(msgs...)
+	if err != nil {
+		panic(err)
+	}
+	g, _, err := bc.simulate(i)
+	if err != nil {
+		panic(err)
+	}
+	return g.GasUsed + baseCost - intrinsicGasTotal
+}
+
+// buildSimTx creates an unsigned tx with an empty single signature and returns
+// the encoded transaction or an error if the unsigned transaction cannot be built.
+func (bc *RelayerContract) buildSimTx(msgs ...sdk.Msg) ([]byte, error) {
+	txf := tx.Factory{}
+	txf = txf.
+		WithChainID(bc.ctx.ChainID()).
+		WithSignMode(signing.SignMode_SIGN_MODE_DIRECT).
+		WithTxConfig(bc.txConfig)
+
+	max, ok := sdkmath.NewIntFromString("1000000")
+	if !ok {
+		return nil, fmt.Errorf("invalid opt value")
+	}
+	extensionOption := ethermint.ExtensionOptionDynamicFeeTx{
+		MaxPriorityPrice: max,
+	}
+	extBytes, err := extensionOption.Marshal()
+	if err != nil {
+		return nil, err
+	}
+	// TODO: config extension option
+	extOpts := []*cdctypes.Any{{
+		TypeUrl: "/ethermint.types.v1.ExtensionOptionDynamicFeeTx",
+		Value:   extBytes,
+	}}
+	txf = txf.WithExtensionOptions(extOpts...)
+	txb, err := txf.BuildUnsignedTx(msgs...)
+	if err != nil {
+		return nil, err
+	}
+
+	// Create an empty signature literal as the ante handler will populate with a
+	// sentinel pubkey.
+	sig := signing.SignatureV2{
+		Data: &signing.SingleSignatureData{
+			SignMode: txf.SignMode(),
+		},
+		Sequence: 1,
+	}
+	if err = txb.SetSignatures(sig); err != nil {
+		return nil, err
+	}
+	txEncoder := bc.txConfig.TxEncoder()
+	return txEncoder(txb.GetTx())
 }
 
 func (bc *RelayerContract) Run(evm *vm.EVM, contract *vm.Contract, readonly bool) ([]byte, error) {
