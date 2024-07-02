@@ -24,7 +24,15 @@ func newRocksDBIterator(source *grocksdb.Iterator, prefix, start, end []byte, is
 			source.Seek(end)
 			if source.Valid() {
 				eoakey := source.Key() // end or after key
-				diff := bytes.Compare(end, eoakey.Data())
+				data := eoakey.Data()
+				diff := bytes.Compare(end, data)
+				originData := string(data)
+				func() {
+					currentData := string(eoakey.Data())
+					if originData != currentData {
+						panic("free different key")
+					}
+				}()
 				eoakey.Free()
 				if diff <= 0 {
 					source.Prev()
