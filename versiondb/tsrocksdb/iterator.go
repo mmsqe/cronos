@@ -24,8 +24,9 @@ func newRocksDBIterator(source *grocksdb.Iterator, prefix, start, end []byte, is
 			source.Seek(end)
 			if source.Valid() {
 				eoakey := source.Key() // end or after key
-				defer eoakey.Free()
-				if bytes.Compare(end, eoakey.Data()) <= 0 {
+				diff := bytes.Compare(end, eoakey.Data())
+				eoakey.Free()
+				if diff <= 0 {
 					source.Prev()
 				}
 			} else {
