@@ -590,8 +590,12 @@ class CosmosCLI:
             fp.flush()
             return self.broadcast_tx(fp.name)
 
-    def unjail(self, addr):
-        return json.loads(
+    def unjail(self, addr, **kwargs):
+        default_kwargs = {
+            "gas_prices": DEFAULT_GAS_PRICE,
+            "gas": DEFAULT_GAS,
+        }
+        rsp = json.loads(
             self.raw(
                 "tx",
                 "slashing",
@@ -602,8 +606,12 @@ class CosmosCLI:
                 node=self.node_rpc,
                 keyring_backend="test",
                 chain_id=self.chain_id,
+                **(default_kwargs | kwargs),
             )
         )
+        if rsp["code"] == 0:
+            rsp = self.event_query_tx_for(rsp["txhash"])
+        return rsp
 
     def create_validator(
         self,
