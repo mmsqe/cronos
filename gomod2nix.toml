@@ -192,8 +192,8 @@ schema = 3
     version = "v1.0.0"
     hash = "sha256-xOeHJWUj6fTc2EUGiE4dgfY2WkvrqTg/FWewoUvQcvg="
   [mod."github.com/cosmos/ibc-go/v8"]
-    version = "v8.2.1"
-    hash = "sha256-FYMkZG3dYTXkqoSSyJSSe5NDd9K+3KlMWKfQKahXz3s="
+    version = "v8.3.2"
+    hash = "sha256-uqt1GlZ1sQ7k5b3vGiRxawGp53yeAv0RjOotOIY7Z0E="
   [mod."github.com/cosmos/ics23/go"]
     version = "v0.10.0"
     hash = "sha256-KYEv727BO/ht63JO02xiKFGFAddg41Ve9l2vSSZZBq0="
@@ -213,8 +213,8 @@ schema = 3
     version = "v0.0.24"
     hash = "sha256-4vUukHONOjNn0qfQr4esK6TWfPWsIp+rbdz65og84lw="
   [mod."github.com/crypto-org-chain/go-block-stm"]
-    version = "v0.0.0-20240408011717-9f11af197bde"
-    hash = "sha256-+UTSUoh4DxkWPQEc/j0atak1Oxq3tdP8r6ZMmB0k5KE="
+    version = "v0.0.0-20240806075927-09a64748f883"
+    hash = "sha256-DuqcnTqpUVRxV+I+CaBuDg/1CLmMeXdw4VEFeuCsUbU="
   [mod."github.com/danieljoos/wincred"]
     version = "v1.2.0"
     hash = "sha256-LHcvTJCc8++bFndbd8ZgMSTe4L5h2C4rN+cSWHCz54Y="
@@ -262,8 +262,8 @@ schema = 3
     hash = "sha256-lE4G5FaRb3MVi9FFVn+WlwsSTOB4SbjmVboKyQ5yB0A="
     replaced = "github.com/crypto-org-chain/go-ethereum"
   [mod."github.com/evmos/ethermint"]
-    version = "v0.6.1-0.20240724133625-f3e62cb25070"
-    hash = "sha256-XL7h6tMMIP3dWKO33UydnMlHZRotfbj1mQGonIEzHe0="
+    version = "v0.6.1-0.20240729070824-350955227f14"
+    hash = "sha256-aZ9Kq7PujK4alMXp1kk7LF7PTap8UdJbt+gK2ljvwyw="
     replaced = "github.com/crypto-org-chain/ethermint"
   [mod."github.com/fatih/color"]
     version = "v1.16.0"

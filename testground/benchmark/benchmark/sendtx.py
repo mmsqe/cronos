@@ -28,9 +28,16 @@ def fund_test_accounts(w3, from_account, num_accounts) -> [Account]:
 
 
 def sendtx(w3: web3.Web3, acct: Account, tx_amount: int):
-    print("test address", acct.address, "balance", w3.eth.get_balance(acct.address))
-
     initial_nonce = w3.eth.get_transaction_count(acct.address)
+    print(
+        "test begin, address:",
+        acct.address,
+        "balance:",
+        w3.eth.get_balance(acct.address),
+        "nonce:",
+        initial_nonce,
+    )
+
     nonce = initial_nonce
     while nonce < initial_nonce + tx_amount:
         tx = {
@@ -55,6 +62,15 @@ def sendtx(w3: web3.Web3, acct: Account, tx_amount: int):
 
         if nonce % 100 == 0:
             print(f"{acct.address} sent {nonce} transactions")
+
+    print(
+        "test end, address:",
+        acct.address,
+        "balance:",
+        w3.eth.get_balance(acct.address),
+        "nonce:",
+        w3.eth.get_transaction_count(acct.address),
+    )
 
 
 def generate_load(cli, num_accounts, num_txs, **kwargs):

@@ -3,11 +3,14 @@ import os
 import shutil
 import socket
 import subprocess
+import tarfile
 import tempfile
+import time
 from pathlib import Path
 from typing import List
 
 import fire
+import requests
 
 from .cli import ChainCommand
 from .peer import (
@@ -21,7 +24,7 @@ from .peer import (
 from .sendtx import generate_load
 from .topology import connect_all
 from .types import PeerPacket
-from .utils import wait_for_block, wait_for_port
+from .utils import wait_for_block, wait_for_port, wait_for_w3
 
 # use cronosd on host machine
 LOCAL_CRONOSD_PATH = "cronosd"
@@ -29,6 +32,7 @@ DEFAULT_CHAIN_ID = "cronos_777-1"
 DEFAULT_DENOM = "basecro"
 # the container must be deployed with the prefixed name
 HOSTNAME_TEMPLATE = "testplan-{index}"
+LOCAL_RPC = "http://localhost:26657"
 
 
 class CLI:
@@ -38,6 +42,9 @@ class CLI:
         validators: int,
         fullnodes: int,
         hostname_template=HOSTNAME_TEMPLATE,
+        num_accounts=10,
+        num_txs=1000,
+        block_executor="block-stm",  # or "sequential"
     ):
         outdir = Path(outdir)
         cli = ChainCommand(LOCAL_CRONOSD_PATH)
@@ -61,11 +68,28 @@ class CLI:
         print("patch genesis")
         # write genesis file and patch config files
         for i in range(validators):
-            patch_configs_local(peers, genesis, outdir, VALIDATOR_GROUP, i, i)
+            patch_configs_local(
+                peers, genesis, outdir, VALIDATOR_GROUP, i, i, block_executor
+            )
         for i in range(fullnodes):
             patch_configs_local(
-                peers, genesis, outdir, FULLNODE_GROUP, i, i + validators
+                peers,
+                genesis,
+                outdir,
+                FULLNODE_GROUP,
+                i,
+                i + validators,
+                block_executor,
             )
+
+        print("write config")
+        cfg = {
+            "validators": validators,
+            "fullnodes": fullnodes,
+            "num_accounts": num_accounts,
+            "num_txs": num_txs,
+        }
+        (outdir / "config.json").write_text(json.dumps(cfg))
 
     def patchimage(
         self,
@@ -89,21 +113,24 @@ ADD ./out {dst}
 
     def run(
         self,
-        outdir: str,
-        validators: int,
+        outdir: str = "/outputs",
+        datadir: str = "/data",
         cronosd=CONTAINER_CRONOSD_PATH,
         global_seq=None,
-        num_accounts=10,
-        num_txs=1000,
     ):
-        outdir = Path(outdir)
+        datadir = Path(datadir)
+
+        cfg = json.loads((datadir / "config.json").read_text())
+
         if global_seq is None:
             global_seq = node_index()
+
+        validators = cfg["validators"]
         group = VALIDATOR_GROUP if global_seq < validators else FULLNODE_GROUP
         group_seq = global_seq if group == VALIDATOR_GROUP else global_seq - validators
         print("node role", global_seq, group, group_seq)
 
-        home = outdir / group / str(group_seq)
+        home = datadir / group / str(group_seq)
 
         # start the node
         logfile = home / "node.log"
@@ -115,16 +142,59 @@ ADD ./out {dst}
         cli = ChainCommand(cronosd)
         wait_for_port(26657)
         wait_for_port(8545)
-        wait_for_port(9090)
-        wait_for_block(cli, 1)
+        wait_for_block(cli, 3)
 
         if group == VALIDATOR_GROUP:
-            # validators don't quit
-            proc.wait()
+            # validators quit when the chain is idle for a while
+            detect_idle(20, 20)
         else:
-            generate_load(cli, num_accounts, num_txs, home=home)
+            wait_for_w3()
+            generate_load(cli, cfg["num_accounts"], cfg["num_txs"], home=home)
 
-            proc.kill()
+        proc.kill()
+        proc.wait()
+
+        # collect outputs
+        output = Path("/data.tar.bz2")
+        with tarfile.open(output, "x:bz2") as tar:
+            tar.add(home, arcname="data")
+        outdir = Path(outdir)
+        if outdir.exists():
+            assert outdir.is_dir()
+            filename = outdir / f"{group}_{group_seq}.tar.bz2"
+            filename.unlink(missing_ok=True)
+            shutil.copy(output, filename)
+
+
+def detect_idle(idle_blocks: int, interval: int):
+    """
+    returns if the chain is empty for consecutive idle_blocks
+    """
+    while True:
+        latest = block_height()
+        for i in range(idle_blocks):
+            height = latest - i
+            if height <= 0:
+                break
+            if len(block_txs(height)) > 0:
+                break
+        else:
+            # normal quit means idle
+            return
+
+        # break early means not idle
+        time.sleep(interval)
+        continue
+
+
+def block_height():
+    rsp = requests.get(f"{LOCAL_RPC}/status").json()
+    return int(rsp["result"]["sync_info"]["latest_block_height"])
+
+
+def block_txs(height):
+    rsp = requests.get(f"{LOCAL_RPC}/block?height={height}").json()
+    return rsp["result"]["block"]["data"]["txs"]
 
 
 def init_node_local(
@@ -147,11 +217,12 @@ def patch_configs_local(
     group: str,
     i: int,
     group_seq: int,
+    block_executor: str,
 ):
     home = outdir / group / str(i)
     (home / "config" / "genesis.json").write_text(json.dumps(genesis))
     p2p_peers = connect_all(peers[i], peers)
-    patch_configs(home, group, p2p_peers)
+    patch_configs(home, group, p2p_peers, block_executor)
 
 
 def node_index() -> int:
