@@ -1,7 +1,7 @@
 std.manifestYamlDoc({
   services: {
     ['testplan-' + i]: {
-      image: 'cronos-testground:latest',
+      image: 'cronos-testground:qbnc62swkxv8kjlrhn8pqimv3b5qmi5r',
       command: 'stateless-testcase run',
       container_name: 'testplan-' + i,
       volumes: [
