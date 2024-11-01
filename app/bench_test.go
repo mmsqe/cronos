@@ -3,11 +3,9 @@ package app
 import (
 	"encoding/binary"
 	"encoding/json"
-	"fmt"
 	"math"
 	"math/big"
 	"math/rand"
-	"path/filepath"
 	"testing"
 
 	"cosmossdk.io/log"
@@ -31,11 +29,9 @@ import (
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 
 	"github.com/evmos/ethermint/crypto/ethsecp256k1"
-	srvflags "github.com/evmos/ethermint/server/flags"
 	"github.com/evmos/ethermint/tests"
 	evmtypes "github.com/evmos/ethermint/x/evm/types"
 
-	memiavlstore "github.com/crypto-org-chain/cronos/store"
 	"github.com/crypto-org-chain/cronos/v2/x/cronos/types"
 )
 
@@ -49,32 +45,35 @@ func BenchmarkERC20Transfer(b *testing.B) {
 			flags.FlagHome: b.TempDir(),
 		})
 	})
-	b.Run("leveldb", func(b *testing.B) {
-		homePath := b.TempDir()
-		db, err := dbm.NewDB("application", dbm.GoLevelDBBackend, filepath.Join(homePath, "data"))
-		require.NoError(b, err)
-		benchmarkERC20Transfer(b, db, AppOptionsMap{
-			flags.FlagHome: homePath,
-		})
-	})
-	b.Run("memiavl", func(b *testing.B) {
-		benchmarkERC20Transfer(b, nil, AppOptionsMap{
-			flags.FlagHome:           b.TempDir(),
-			memiavlstore.FlagMemIAVL: true,
-		})
-	})
-	for _, workers := range []int{1, 8, 16, 32} {
-		b.Run(fmt.Sprintf("memiavl-stm-%d", workers), func(b *testing.B) {
-			benchmarkERC20Transfer(b, nil, AppOptionsMap{
-				flags.FlagHome:                  b.TempDir(),
-				memiavlstore.FlagMemIAVL:        true,
-				memiavlstore.FlagCacheSize:      0,
-				srvflags.EVMBlockExecutor:       "block-stm",
-				srvflags.EVMBlockSTMWorkers:     workers,
-				srvflags.EVMBlockSTMPreEstimate: BlockSTMPreEstimate,
-			})
-		})
-	}
+
+	// b.Run("leveldb", func(b *testing.B) {
+	// 	homePath := b.TempDir()
+	// 	db, err := dbm.NewDB("application", dbm.GoLevelDBBackend, filepath.Join(homePath, "data"))
+	// 	require.NoError(b, err)
+	// 	benchmarkERC20Transfer(b, db, AppOptionsMap{
+	// 		flags.FlagHome: homePath,
+	// 	})
+	// })
+	// b.Run("memiavl", func(b *testing.B) {
+	// 	benchmarkERC20Transfer(b, nil, AppOptionsMap{
+	// 		flags.FlagHome:           b.TempDir(),
+	// 		memiavlstore.FlagMemIAVL: true,
+	// 	})
+	// })
+
+	// for _, workers := range []int{1, 8, 16, 32} {
+	// for _, workers := range []int{12} {
+	// 	b.Run(fmt.Sprintf("memiavl-stm-%d", workers), func(b *testing.B) {
+	// 		benchmarkERC20Transfer(b, nil, AppOptionsMap{
+	// 			flags.FlagHome:                  b.TempDir(),
+	// 			memiavlstore.FlagMemIAVL:        true,
+	// 			memiavlstore.FlagCacheSize:      0,
+	// 			srvflags.EVMBlockExecutor:       "block-stm",
+	// 			srvflags.EVMBlockSTMWorkers:     workers,
+	// 			srvflags.EVMBlockSTMPreEstimate: BlockSTMPreEstimate,
+	// 		})
+	// 	})
+	// }
 }
 
 type TestAccount struct {
@@ -85,6 +84,9 @@ type TestAccount struct {
 
 // pass `nil` to db to use memiavl
 func benchmarkERC20Transfer(b *testing.B, db dbm.DB, appOpts servertypes.AppOptions) {
+	// txsPerBlock := 5
+	// accounts := 100000
+
 	txsPerBlock := 5000
 	accounts := 100
 	gasPrice := big.NewInt(100000000000)
@@ -237,6 +239,7 @@ func benchmarkERC20Transfer(b *testing.B, db dbm.DB, appOpts servertypes.AppOpti
 
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
+		b.StartTimer()
 		rsp, err := app.FinalizeBlock(&abci.RequestFinalizeBlock{
 			Txs:             transferTxs[i*txsPerBlock : (i+1)*txsPerBlock],
 			Height:          int64(i) + 2,
@@ -246,6 +249,7 @@ func benchmarkERC20Transfer(b *testing.B, db dbm.DB, appOpts servertypes.AppOpti
 		for _, txResult := range rsp.TxResults {
 			require.Equal(b, abci.CodeTypeOK, txResult.Code, txResult.Log)
 		}
+		b.StopTimer()
 		_, err = app.Commit()
 		require.NoError(b, err)
 	}
