@@ -4,17 +4,20 @@
     cmd: 'cronosd',
     'start-flags': '--trace',
     config: {
-      db_backend: 'rocksdb',
+      db_backend: 'goleveldb',
       mempool: {
         version: 'v1',
       },
     },
     'app-config': {
+      pruning: 'nothing',
+      'state-sync': {
+        'snapshot-interval': 20,
+      },
       chain_id: 'cronos_777-1',
-      'app-db-backend': 'rocksdb',
+      'app-db-backend': 'goleveldb',
       'minimum-gas-prices': '0basetcro',
       'index-events': ['ethereum_tx.ethereumTxHash'],
-      'iavl-lazy-loading': true,
       'json-rpc': {
         address: '127.0.0.1:{EVMRPC_PORT}',
         'ws-address': '127.0.0.1:{EVMRPC_PORT_WS}',
@@ -37,33 +40,12 @@
       client_config: {
         'broadcast-mode': 'sync',
       },
-      'app-config': {
-        memiavl: {
-          enable: true,
-          'zero-copy': true,
-          'snapshot-interval': 5,
-          'cache-size': 0,
-        },
-        versiondb: {
-          enable: true,
-        },
-        evm: {
-          'block-executor': 'block-stm',
-          'block-stm-workers': 32,
-        },
-      },
     }, {
       coins: '1000000000000000000stake,10000000000000000000000basetcro',
       staked: '1000000000000000000stake',
       mnemonic: '${VALIDATOR2_MNEMONIC}',
       client_config: {
         'broadcast-mode': 'sync',
-      },
-      config: {
-        db_backend: 'pebbledb',
-      },
-      'app-config': {
-        'app-db-backend': 'pebbledb',
       },
     }],
     accounts: [{

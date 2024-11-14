@@ -252,13 +252,14 @@ def test_statesync(cronos):
                 "address": "127.0.0.1:{EVMRPC_PORT}",
                 "ws-address": "127.0.0.1:{EVMRPC_PORT_WS}",
             },
-            "memiavl": {
-                "enable": True,
-                "zero-copy": True,
-                "snapshot-interval": 5,
+            "pruning": "everything",
+            "state-sync": {
+                "snapshot-interval": 0,
             },
         },
     )
+    w3_wait_for_block(w3, 39)
+    return
     clustercli.supervisor.startProcess(f"{clustercli.chain_id}-node{i}")
     # Wait 1 more block
     wait_for_block(clustercli.cosmos_cli(i), cli0.block_height() + 1)

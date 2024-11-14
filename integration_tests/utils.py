@@ -114,7 +114,7 @@ def wait_for_block(cli, height, timeout=240):
             print(f"get sync status failed: {e}", file=sys.stderr)
         else:
             current_height = int(get_sync_info(status)["latest_block_height"])
-            print("current block height", current_height)
+            # print("current block height", current_height)
             if current_height >= height:
                 break
         time.sleep(0.5)
@@ -143,7 +143,10 @@ def wait_for_block_time(cli, t):
         time.sleep(0.5)
 
 
-def approve_proposal(n, events, event_query_tx=False):
+DEFAULT_GAS_PRICE = "5000000000000basetcro"
+
+
+def approve_proposal(n, events, event_query_tx=False, gas_prices=DEFAULT_GAS_PRICE):
     cli = n.cosmos_cli()
 
     # get proposal_id
@@ -152,14 +155,15 @@ def approve_proposal(n, events, event_query_tx=False):
     )
     proposal_id = ev["proposal_id"]
     for i in range(len(n.config["validators"])):
-        rsp = n.cosmos_cli(i).gov_vote("validator", proposal_id, "yes", event_query_tx)
+        rsp = n.cosmos_cli(i).gov_vote(
+            "validator", proposal_id, "yes", event_query_tx, gas_prices=gas_prices
+        )
         assert rsp["code"] == 0, rsp["raw_log"]
     wait_for_new_blocks(cli, 1)
     res = cli.query_tally(proposal_id)
     res = res.get("tally") or res
-    assert (
-        int(res["yes_count"]) == cli.staking_pool()
-    ), "all validators should have voted yes"
+    count = res.get("yes") or res.get("yes_count")
+    assert int(count) == cli.staking_pool(), "all validators should have voted yes"
     print("wait for proposal to be activated")
     proposal = cli.query_proposal(proposal_id)
     wait_for_block_time(cli, isoparse(proposal["voting_end_time"]))
