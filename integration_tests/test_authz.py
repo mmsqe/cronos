@@ -2,6 +2,40 @@ import time
 from .utils import wait_for_new_blocks
 
 def test_authz(cronos):
+    updated = """
+[program:cronos_777-1-node0]
+autostart = true
+autorestart = true
+redirect_stderr = true
+startsecs = 3
+directory = %(here)s/node0
+command = cronosd start --home . --trace
+stdout_logfile = %(here)s/node0.log
+
+[program:cronos_777-1-node1]
+autostart = true
+autorestart = true
+redirect_stderr = true
+startsecs = 3
+directory = %(here)s/node1
+command = /Users/mavis/Desktop/authz/no_reg/cronosd start --home . --trace
+stdout_logfile = %(here)s/node1.log
+
+[program:cronos_777-1-node2]
+autostart = true
+autorestart = true
+redirect_stderr = true
+startsecs = 3
+directory = %(here)s/node2
+command = /Users/mavis/Desktop/authz/no_reg/cronosd start --home . --trace
+stdout_logfile = %(here)s/node2.log
+    """
+
+    with open(cronos.base_dir / "tasks.ini", "w") as ini_file:
+        ini_file.write(updated)
+
+    cronos.supervisorctl("update")
+    time.sleep(1)
     cli = cronos.cosmos_cli()
     wait_for_new_blocks(cli, 1)
     spend_limit = 200
