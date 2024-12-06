@@ -51,7 +51,9 @@ class ChainCommand:
     def __call__(self, cmd, *args, stdin=None, stderr=subprocess.STDOUT, **kwargs):
         "execute chain-maind"
         args = " ".join(build_cli_args_safe(cmd, *args, **kwargs))
-        return interact(f"{self.cmd} {args}", input=stdin, stderr=stderr)
+        cli = f"{self.cmd} {args}"
+        print("mm-cli", cli)
+        return interact(cli, input=stdin, stderr=stderr)
 
 
 class CosmosCLI:
@@ -391,7 +393,7 @@ class CosmosCLI:
                 **kwargs,
             )
         )
-        if rsp["code"] == 0 and event_query_tx:
+        if not generate_only and rsp["code"] == 0 and event_query_tx:
             rsp = self.event_query_tx_for(rsp["txhash"])
         return rsp
 
@@ -2023,3 +2025,35 @@ class CosmosCLI:
 
     def prune(self, kind="everything"):
         return self.raw("prune", kind, home=self.data_dir).decode()
+
+    def grant_authorization(
+        self, grantee, authorization_type, granter, *k_options, **kv_options
+    ):
+        rsp = json.loads(
+            self.raw(
+                "tx",
+                "authz",
+                "grant",
+                grantee,
+                authorization_type,
+                "-y",
+                *k_options,
+                from_=granter,
+                home=self.data_dir,
+                **kv_options,
+            )
+        )
+        if rsp["code"] == 0:
+            rsp = self.event_query_tx_for(rsp["txhash"])
+        return rsp
+
+    def sign_tx_json(self, tx, signer):
+        tx["body"]["extension_options"].append(
+            {
+                "@type": "/ethermint.types.v1.ExtensionOptionDynamicFeeTx",
+            }
+        )
+        with tempfile.NamedTemporaryFile("w") as fp:
+            json.dump(tx, fp)
+            fp.flush()
+            return self.sign_single_tx(fp.name, signer)

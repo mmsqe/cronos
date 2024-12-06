@@ -2,14 +2,16 @@
   dotenv: '../../scripts/.env',
   'cronos_777-1': {
     cmd: 'cronosd',
-    'start-flags': '--trace',
+    'start-flags': '--trace --log_level debug',
     config: {
       db_backend: 'rocksdb',
       mempool: {
         version: 'v1',
+        recheck: false,
       },
     },
     'app-config': {
+      'unsafe-dummy-check-tx': true,
       chain_id: 'cronos_777-1',
       'app-db-backend': 'rocksdb',
       'minimum-gas-prices': '0basetcro',
@@ -27,7 +29,7 @@
         'block-executor': 'sequential',
       },
       mempool: {
-        'max-txs': 1000,
+        'max-txs': -1,
       },
     },
     validators: [{
@@ -141,8 +143,10 @@
         },
         feemarket: {
           params: {
-            no_base_fee: false,
-            base_fee: '100000000000',
+            // no_base_fee: false,
+            // base_fee: '100000000000',
+            no_base_fee: true,
+            base_fee: '0',
           },
         },
       },
