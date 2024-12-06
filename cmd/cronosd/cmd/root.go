@@ -67,9 +67,6 @@ func NewRootCmd() *cobra.Command {
 		simtestutil.NewAppOptionsWithFlagHome(app.DefaultNodeHome),
 	)
 	encodingConfig := tempApp.EncodingConfig()
-	// for decoding legacy transactions whose messages are removed
-	app.RegisterLegacyCodec(encodingConfig.Amino)
-	app.RegisterLegacyInterfaces(encodingConfig.InterfaceRegistry)
 	initClientCtx := client.Context{}.
 		WithCodec(encodingConfig.Codec).
 		WithInterfaceRegistry(encodingConfig.InterfaceRegistry).

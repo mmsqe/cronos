@@ -851,6 +851,10 @@ func New(
 	app.BasicModuleManager.RegisterLegacyAminoCodec(cdc)
 	app.BasicModuleManager.RegisterInterfaces(interfaceRegistry)
 
+	// for decoding legacy transactions whose messages are removed
+	RegisterLegacyCodec(encodingConfig.Amino)
+	RegisterLegacyInterfaces(encodingConfig.InterfaceRegistry)
+
 	// During begin block slashing happens after distr.BeginBlocker so that
 	// there is nothing left over in the validator fee pool, so as to keep the
 	// CanWithdrawInvariant invariant.
