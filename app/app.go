@@ -852,8 +852,8 @@ func New(
 	app.BasicModuleManager.RegisterInterfaces(interfaceRegistry)
 
 	// for decoding legacy transactions whose messages are removed
-	RegisterLegacyCodec(encodingConfig.Amino)
-	RegisterLegacyInterfaces(encodingConfig.InterfaceRegistry)
+	// RegisterLegacyCodec(encodingConfig.Amino)
+	// RegisterLegacyInterfaces(encodingConfig.InterfaceRegistry)
 
 	// During begin block slashing happens after distr.BeginBlocker so that
 	// there is nothing left over in the validator fee pool, so as to keep the
@@ -1495,19 +1495,5 @@ func maxParallelism() int {
 }
 
 func (app *App) CheckTx(req *abci.RequestCheckTx) (*abci.ResponseCheckTx, error) {
-	if app.dummyCheckTx {
-		tx, err := app.txDecoder(req.Tx)
-		if err != nil {
-			return nil, err
-		}
-
-		feeTx, ok := tx.(sdk.FeeTx)
-		if !ok {
-			return nil, errors.Wrap(sdkerrors.ErrInvalidRequest, "tx must be FeeTx")
-		}
-
-		return &abci.ResponseCheckTx{Code: abci.CodeTypeOK, GasWanted: int64(feeTx.GetGas())}, nil
-	}
-
-	return app.BaseApp.CheckTx(req)
+	return &abci.ResponseCheckTx{Code: abci.CodeTypeOK, GasWanted: 1}, nil
 }
