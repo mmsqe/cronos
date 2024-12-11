@@ -23,8 +23,8 @@
         'block-range-cap': 10000,
         'logs-cap': 10000,
       },
-      evm: {
-        'block-executor': 'sequential',
+      'block-stm': {
+        executor: 'sequential',
       },
       mempool: {
         'max-txs': 1000,
@@ -47,9 +47,9 @@
         versiondb: {
           enable: true,
         },
-        evm: {
-          'block-executor': 'block-stm',
-          'block-stm-workers': 32,
+        'block-stm': {
+          executor: 'block-stm',
+          'workers': 32,
         },
       },
     }, {

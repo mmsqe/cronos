@@ -46,6 +46,8 @@ require (
 	gopkg.in/yaml.v2 v2.4.0
 )
 
+require github.com/cosmos/cosmos-proto v1.0.0-beta.5
+
 require (
 	cloud.google.com/go v0.115.0 // indirect
 	cloud.google.com/go/auth v0.6.0 // indirect
@@ -86,7 +88,6 @@ require (
 	github.com/coinbase/rosetta-sdk-go/types v1.0.0 // indirect
 	github.com/cometbft/cometbft-db v0.15.0 // indirect
 	github.com/cosmos/btcutil v1.0.5 // indirect
-	github.com/cosmos/cosmos-proto v1.0.0-beta.5 // indirect
 	github.com/cosmos/go-bip39 v1.0.0 // indirect
 	github.com/cosmos/gogogateway v1.2.0 // indirect
 	github.com/cosmos/iavl v1.2.2 // indirect
@@ -251,9 +252,9 @@ require (
 
 // release/v0.50.x
 replace (
-	cosmossdk.io/store => github.com/crypto-org-chain/cosmos-sdk/store v0.0.0-20241205052910-142c0afa4948
-	cosmossdk.io/x/tx => github.com/crypto-org-chain/cosmos-sdk/x/tx v0.0.0-20241205052910-142c0afa4948
-	github.com/cosmos/cosmos-sdk => github.com/crypto-org-chain/cosmos-sdk v0.43.0-beta1.0.20241205052910-142c0afa4948
+	cosmossdk.io/store => github.com/mmsqe/cosmos-sdk/store v0.0.0-20241211125423-756926949166
+	cosmossdk.io/x/tx => github.com/mmsqe/cosmos-sdk/x/tx v0.0.0-20241211125423-756926949166
+	github.com/cosmos/cosmos-sdk => github.com/mmsqe/cosmos-sdk v0.46.0-beta2.0.20241211125423-756926949166
 )
 
 replace (
@@ -272,7 +273,7 @@ replace (
 	github.com/dgrijalva/jwt-go => github.com/golang-jwt/jwt/v4 v4.4.2
 	github.com/ethereum/go-ethereum => github.com/crypto-org-chain/go-ethereum v1.10.20-0.20240926023215-d2275b4afb9a
 	// release/v1.4.x
-	github.com/evmos/ethermint => github.com/crypto-org-chain/ethermint v0.6.1-0.20241118003049-cd93407bcf05
+	github.com/evmos/ethermint => github.com/mmsqe/ethermint v0.6.5-0.20241211125635-67986bde8492
 	// Fix upstream GHSA-h395-qcrw-5vmq and GHSA-3vp4-m3rf-835h vulnerabilities.
 	// TODO Remove it: https://github.com/cosmos/cosmos-sdk/issues/10409
 	github.com/gin-gonic/gin => github.com/gin-gonic/gin v1.9.0

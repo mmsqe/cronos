@@ -153,10 +153,10 @@ def patch_configs(home: Path, peers: str, config_patch: dict, app_patch: dict):
             "cache-size": 0,
         },
         "mempool": {"max-txs": MEMPOOL_SIZE},
-        "evm": {
-            "block-executor": "block-stm",  # or "sequential"
-            "block-stm-workers": 0,
-            "block-stm-pre-estimate": True,
+        "block-stm": {
+            "executor": "block-stm",  # or "sequential"
+            "workers": 0,
+            "pre-estimate": True,
         },
         "json-rpc": {"enable-indexer": True},
     }

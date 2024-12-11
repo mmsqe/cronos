@@ -434,8 +434,7 @@ func New(
 		app.SetProcessProposal(blockProposalHandler.ProcessProposalHandler())
 	})
 
-	blockSTMEnabled := cast.ToString(appOpts.Get(srvflags.EVMBlockExecutor)) == "block-stm"
-
+	blockSTMEnabled := cast.ToString(appOpts.Get(server.FlagBlockSTMExecutor)) == config.BlockExecutorBlockSTM
 	var cacheSize int
 	if !blockSTMEnabled {
 		// only enable memiavl cache if block-stm is not enabled, because it's not concurrency-safe.
@@ -1069,17 +1068,24 @@ func New(
 	app.ScopedICAControllerKeeper = scopedICAControllerKeeper
 	// this line is used by starport scaffolding # stargate/app/beforeInitReturn
 
+	app.SetTxResponsePatcher(evmtypes.EvmTxResponsePatcher{})
 	if blockSTMEnabled {
 		sdk.SetAddrCacheEnabled(false)
-		workers := cast.ToInt(appOpts.Get(srvflags.EVMBlockSTMWorkers))
+		workers := cast.ToInt(appOpts.Get(server.FlagBlockSTMWorkers))
 		if workers == 0 {
 			workers = maxParallelism()
 		}
-		preEstimate := cast.ToBool(appOpts.Get(srvflags.EVMBlockSTMPreEstimate))
+		preEstimate := cast.ToBool(appOpts.Get(server.FlagBlockSTMPreEstimate))
 		logger.Info("block-stm executor enabled", "workers", workers, "pre-estimate", preEstimate)
-		app.SetTxExecutor(evmapp.STMTxExecutor(app.GetStoreKeys(), workers, preEstimate, app.EvmKeeper, txConfig.TxDecoder()))
+		txDecoder := txConfig.TxDecoder()
+		stores := app.GetStoreKeys()
+		var preEstimateFn evmapp.PreEstimateFunc
+		if preEstimate {
+			preEstimateFn = evmapp.GetPreEstimateFunc(stores, app.EvmKeeper)
+		}
+		app.SetTxExecutor(baseapp.STMTxExecutor(stores, workers, txDecoder, preEstimateFn))
 	} else {
-		app.SetTxExecutor(evmapp.DefaultTxExecutor)
+		app.SetTxExecutor(baseapp.DefaultTxExecutor)
 	}
 
 	return app

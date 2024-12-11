@@ -23,6 +23,8 @@ import (
 	baseapp "github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
+	"github.com/cosmos/cosmos-sdk/server"
+	"github.com/cosmos/cosmos-sdk/server/config"
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
 	"github.com/cosmos/cosmos-sdk/testutil/mock"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
@@ -31,7 +33,6 @@ import (
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 
 	"github.com/evmos/ethermint/crypto/ethsecp256k1"
-	srvflags "github.com/evmos/ethermint/server/flags"
 	"github.com/evmos/ethermint/tests"
 	evmtypes "github.com/evmos/ethermint/x/evm/types"
 
@@ -66,12 +67,12 @@ func BenchmarkERC20Transfer(b *testing.B) {
 	for _, workers := range []int{1, 8, 16, 32} {
 		b.Run(fmt.Sprintf("memiavl-stm-%d", workers), func(b *testing.B) {
 			benchmarkERC20Transfer(b, nil, AppOptionsMap{
-				flags.FlagHome:                  b.TempDir(),
-				memiavlstore.FlagMemIAVL:        true,
-				memiavlstore.FlagCacheSize:      0,
-				srvflags.EVMBlockExecutor:       "block-stm",
-				srvflags.EVMBlockSTMWorkers:     workers,
-				srvflags.EVMBlockSTMPreEstimate: BlockSTMPreEstimate,
+				flags.FlagHome:                 b.TempDir(),
+				memiavlstore.FlagMemIAVL:       true,
+				memiavlstore.FlagCacheSize:     0,
+				server.FlagBlockSTMExecutor:    config.BlockExecutorBlockSTM,
+				server.FlagBlockSTMWorkers:     workers,
+				server.FlagBlockSTMPreEstimate: BlockSTMPreEstimate,
 			})
 		})
 	}
