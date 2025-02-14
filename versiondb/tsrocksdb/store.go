@@ -206,6 +206,7 @@ func (s Store) Import(version int64, ch <-chan versiondb.ImportEntry) error {
 }
 
 func (s Store) Flush() error {
+	return nil
 	opts := grocksdb.NewDefaultFlushOptions()
 	defer opts.Destroy()
 
