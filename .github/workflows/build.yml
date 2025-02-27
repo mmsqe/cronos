@@ -33,7 +33,6 @@ jobs:
             *.mod
             *.sum
       - uses: cachix/cachix-action@v12
-        if: steps.changed-files.outputs.any_changed == 'true'
         with:
           name: cronos
           # github don't pass secrets for pull request from fork repos,
@@ -41,7 +40,6 @@ jobs:
           signingKey: "${{ secrets.CACHIX_SIGNING_KEY }}"
       - name: Run build
         run: ./scripts/release.sh
-        if: steps.changed-files.outputs.any_changed == 'true'
       - uses: actions/upload-artifact@v4
         with:
           name: "cronosd-tarball-${{ matrix.os }}"
