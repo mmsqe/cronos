@@ -890,8 +890,8 @@ github.com/mitchellh/mapstructure v1.5.0 h1:jeMsZIYE/09sWLaz43PL7Gy6RuMjD2eJVyua
 github.com/mitchellh/mapstructure v1.5.0/go.mod h1:bFUtVrKA4DC2yAKiSyO/QUcy7e+RRV2QTWOzhPopBRo=
 github.com/mitchellh/pointerstructure v1.2.0 h1:O+i9nHnXS3l/9Wu7r4NrEdwA2VFTicjUEN1uBnDo34A=
 github.com/mitchellh/pointerstructure v1.2.0/go.mod h1:BRAsLI5zgXmw97Lf6s25bs8ohIXc3tViBH44KcwB2g4=
-github.com/mmsqe/ethermint v0.6.5-0.20250307065347-1ec91b7f1aff h1:98IOU6Ua/7EDw6jICwPPG4jsXVJ5nq15ECrucPpBjZo=
-github.com/mmsqe/ethermint v0.6.5-0.20250307065347-1ec91b7f1aff/go.mod h1:b/zGbkkYhrshNpuHTk1sCA5Teyo5d3Ex3CpPdq8f+ZA=
+github.com/mmsqe/ethermint v0.6.5-0.20250307061947-db439b8619a9 h1:dbxMtQrs9cJNsKmL7bTY596aBujtvj+ibcxFGYLJgWE=
+github.com/mmsqe/ethermint v0.6.5-0.20250307061947-db439b8619a9/go.mod h1:b/zGbkkYhrshNpuHTk1sCA5Teyo5d3Ex3CpPdq8f+ZA=
 github.com/mmsqe/grocksdb v0.0.0-20250224034712-04aa63064718 h1:c9jefT+GQBp+6chgOYfDdrtlbYf6dj+davhcPtNEQbY=
 github.com/mmsqe/grocksdb v0.0.0-20250224034712-04aa63064718/go.mod h1:C3CNe9UYc9hlEM2pC82AqiGS3LRW537u9LFV4wIZuHk=
 github.com/modern-go/concurrent v0.0.0-20180228061459-e0a39a4cb421/go.mod h1:6dJC0mAP4ikYIbvyc7fijjWJddQyLn8Ig3JB5CqoB9Q=
